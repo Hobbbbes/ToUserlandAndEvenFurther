@@ -1,0 +1,3 @@
+[submodule "OVMFbin"]
+	path = OVMFbin
+	url = git@github.com:Absurdponcho/OVMFbin.git
