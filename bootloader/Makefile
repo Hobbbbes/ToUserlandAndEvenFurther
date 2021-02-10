@@ -17,7 +17,7 @@ EFI_X64_HEADER = /usr/include/efi/x86_64/
 CFLAGS = -c -fno-stack-protector -fpic -fshort-wchar -mno-red-zone -I ${EFI_HEADER} -I ${EFI_X64_HEADER} -Wall -DGNU_EFI_USE_MS_ABI -Dx86_64 -m64
 LDFLAGS = -nostdlib -znocombreloc -T /usr/lib/elf_x86_64_efi.lds -shared -Bsymbolic -L /usr/lib /usr/lib/crt0-efi-x86_64.o
 
-all: $(BUILDDIR)/main.efi
+all: setup $(BUILDDIR)/main.efi
 
 $(BUILDDIR)/main.efi: $(BUILDDIR)/main.so
 	objcopy -j .text              \
@@ -40,8 +40,8 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
  
 clean:
 	rm -f $(BUILDDIR)/main.so $(BUILDDIR)/main.efi ${OBJ}
-
-test: ${OBJ}
-	echo ${SRC}
+setup:
+	mkdir -p $(OBJDIR) 
+	mkdir -p $(BUILDDIR)
 run:
 	uefi-run -b /usr/share/edk2-ovmf/x64/OVMF.fd -q /usr/bin/qemu-system-x86_64 $(BUILDDIR)/main.efi
