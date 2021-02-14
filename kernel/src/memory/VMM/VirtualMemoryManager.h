@@ -16,3 +16,5 @@ class VirtualMemoryManager{
         
         PageStructureIndizes getIndizes(uint64_t virtualAddr);
 };
+
+extern VirtualMemoryManager KernelVMM;

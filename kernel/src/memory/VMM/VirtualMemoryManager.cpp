@@ -1,23 +1,7 @@
 #include "VirtualMemoryManager.h"
 #include "../PMM/PageFrameAllocator.h"
 #include "../memory.h"
-/*
-class VirtualMemoryManager{
-    public:
-        VirtualMemoryManager(PageTable* PML4Addr);
-        void MapMemory(const uint64_t virtualAddr, const uint64_t physicalAddr);
-    private:
-        PageTable* PML4Addr;
-        struct PageStructureIndizes{
-            uint64_t PDP_i;
-            uint64_t PD_i;
-            uint64_t PT_i;
-            uint64_t P_i;
-        };
-        
-        PageStructureIndizes getIndizes(const uint64_t virtualAddr);
-};
-*/
+VirtualMemoryManager KernelVMM;
 
 VirtualMemoryManager::VirtualMemoryManager(PageTable* PML4Addr) : PML4Address(PML4Addr){}
 VirtualMemoryManager::VirtualMemoryManager() : PML4Address(nullptr){}
