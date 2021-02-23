@@ -1,6 +1,8 @@
 #include "PreBoot/Bootinfo.h"
 #include "KernelUtil.h"
 #define STACK_SIZE 4
+#define INIT_HEAP_SIZE 10
+#define HEAP_START 0x400000000000 //64TB
 
 uint8_t Stack[STACK_SIZE * 0x1000]
 __attribute__((aligned(0x1000)));
@@ -17,15 +19,40 @@ void IdentityMapPhysicalMemory(BootInfo* bi){
         addr < bi->framebuffer->BufferSize; addr++){
         KernelVMM.MapMemory(addr,addr);
     }
+
+}
+
+void InitHeap(){
+    for(uint64_t i = 0; i<=INIT_HEAP_SIZE;i++){
+        uint64_t page = KernelPMM.RequestPage();
+        KernelVMM.MapMemory(HEAP_START + (i * 0x1000), page);
+    }
+    initHeap(HEAP_START,HEAP_START + (INIT_HEAP_SIZE * 0x1000));
 }
 
 extern "C" void _start(BootInfo* bootinfo){
 
-    GlobalPageFrameAllocator = PageFrameAllocator(bootinfo->mMap,bootinfo->mMapSize,bootinfo->mMapDescriptorSize);
+    KernelPMM = PageFrameAllocator(bootinfo->mMap,bootinfo->mMapSize,bootinfo->mMapDescriptorSize);
     uint64_t kernelSizePages = (reinterpret_cast<uint64_t>(&_KernelEnd) - reinterpret_cast<uint64_t>(&_KernelStart)) / 0x1000 + 1;
-    GlobalPageFrameAllocator.LockPages(reinterpret_cast<uint64_t>(&_KernelStart),kernelSizePages);
+    KernelPMM.LockPages(reinterpret_cast<uint64_t>(&_KernelStart),kernelSizePages);
     
+    uint64_t PLM4 = KernelPMM.RequestPage();
+    memset(reinterpret_cast<void*>(PLM4), (uint8_t)0,0x1000);
 
+    KernelVMM = VirtualMemoryManager(reinterpret_cast<PageTable*>(PLM4));
+
+    IdentityMapPhysicalMemory(bootinfo);
+    asm("mov %0,%%cr3" : : "r"(PLM4));
+    InitHeap();
+
+
+    int* test = new int;
+    int* test2 = new int[20];
+    *test = 0xf0f0f0f0;
+    for(int i = 0; i<20;i++){
+        *test2 = 0xefefefef;
+        test2++;
+    }
     //Sets new stack up and calls main with bootinfo as first parameter
     init_stack(bootinfo,reinterpret_cast<uint64_t>(Stack) + STACK_SIZE * 0x1000); 
 }

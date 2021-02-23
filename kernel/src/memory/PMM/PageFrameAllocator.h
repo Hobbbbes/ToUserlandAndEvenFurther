@@ -31,4 +31,4 @@ class PageFrameAllocator{
         Bitmap pageBitmap;
         bool InitializedSuccessfully = false;
 };
-extern PageFrameAllocator GlobalPageFrameAllocator;
+extern PageFrameAllocator KernelPMM;

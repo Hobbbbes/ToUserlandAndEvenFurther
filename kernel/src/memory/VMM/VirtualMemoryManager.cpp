@@ -12,7 +12,7 @@ void VirtualMemoryManager::MapMemory(const uint64_t virtAddr, const uint64_t phy
     PDE = PML4Address->entries[indizes.PDP_i];
     PageTable* PDP;
     if(!PDE.GetFlag(PT_Flag::Present)){
-        PDP = reinterpret_cast<PageTable*>(GlobalPageFrameAllocator.RequestPage());
+        PDP = reinterpret_cast<PageTable*>(KernelPMM.RequestPage());
         memset(PDP,(uint8_t)0x00,0x1000);
         PDE.SetAddress(reinterpret_cast<uint64_t>(PDP) >> 12);
         PDE.SetFlag(PT_Flag::Present, true);
@@ -24,7 +24,7 @@ void VirtualMemoryManager::MapMemory(const uint64_t virtAddr, const uint64_t phy
     PDE = PDP->entries[indizes.PD_i];
     PageTable* PD;
     if(!PDE.GetFlag(PT_Flag::Present)){
-        PD = reinterpret_cast<PageTable*>(GlobalPageFrameAllocator.RequestPage());
+        PD = reinterpret_cast<PageTable*>(KernelPMM.RequestPage());
         memset(PD,(uint8_t)0x00,0x1000);
         PDE.SetAddress(reinterpret_cast<uint64_t>(PD) >> 12);
         PDE.SetFlag(PT_Flag::Present, true);
@@ -36,7 +36,7 @@ void VirtualMemoryManager::MapMemory(const uint64_t virtAddr, const uint64_t phy
     PDE = PD->entries[indizes.PT_i];
     PageTable* PT;
     if(!PDE.GetFlag(PT_Flag::Present)){
-        PT = reinterpret_cast<PageTable*>(GlobalPageFrameAllocator.RequestPage());
+        PT = reinterpret_cast<PageTable*>(KernelPMM.RequestPage());
         memset(PT,(uint8_t)0x00,0x1000);
         PDE.SetAddress(reinterpret_cast<uint64_t>(PT) >> 12);
         PDE.SetFlag(PT_Flag::Present, true);
@@ -63,4 +63,5 @@ VirtualMemoryManager::PageStructureIndizes VirtualMemoryManager::getIndizes(uint
     res.PD_i = virtualAddr & 0x1ff;
     virtualAddr >>=9;
     res.PDP_i = virtualAddr & 0x1ff;
+    return res;
 }

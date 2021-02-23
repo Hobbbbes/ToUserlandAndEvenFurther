@@ -1,5 +1,5 @@
 #include "PageFrameAllocator.h"
-PageFrameAllocator GlobalPageFrameAllocator;
+PageFrameAllocator KernelPMM;
 
 PageFrameAllocator::PageFrameAllocator(EFI_MEMORY_DESCRIPTOR* mMap, uint64_t mMapSize, uint64_t mMapDescSize){
     
