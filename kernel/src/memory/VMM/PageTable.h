@@ -8,7 +8,7 @@ enum PT_Flag{
     WriteTrough = 3,
     CachedDiesabled  = 4,
     Accessed = 5,
-//Bit to Ignore
+    Dirty = 6,
     LargePages = 7,
 //Bit to Ignore
     Custom0 = 9,
@@ -40,6 +40,9 @@ class PageDirectoryEntry{
         }
         inline uint64_t GetAddress(){
             return (value & 0x000ffffffffff000) >> 12;
+        }
+        inline void clear(){
+            value = 0;
         }
 };
 

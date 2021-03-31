@@ -53,6 +53,35 @@ void VirtualMemoryManager::MapMemory(const uint64_t virtAddr, const uint64_t phy
     PT->entries[indizes.P_i] = PDE;
 }
 
+void VirtualMemoryManager::UnMapMemory(const uint64_t virtAddr){
+    VirtualMemoryManager::PageStructureIndizes indizes = getIndizes(virtAddr);
+    PageDirectoryEntry PDE;
+    PDE = PML4Address->entries[indizes.PDP_i];
+    PageTable* PDP;
+    if(!PDE.GetFlag(PT_Flag::Present)){
+        return;
+    } else {
+        PDP = reinterpret_cast<PageTable*>(reinterpret_cast<uint64_t>(PDE.GetAddress()) << 12);
+    }
+    PDE = PDP->entries[indizes.PD_i];
+    PageTable* PD;
+    if(!PDE.GetFlag(PT_Flag::Present)){
+        return;
+    } else {
+        PD = reinterpret_cast<PageTable*>(reinterpret_cast<uint64_t>(PDE.GetAddress()) << 12);
+    }
+    PDE = PD->entries[indizes.PT_i];
+    PageTable* PT;
+    if(!PDE.GetFlag(PT_Flag::Present)){
+        return;
+    } else {
+        PT = reinterpret_cast<PageTable*>(reinterpret_cast<uint64_t>(PDE.GetAddress()) << 12);
+    }
+
+    PDE = PT->entries[indizes.P_i];
+    PT->entries[indizes.P_i].clear();
+}
+
 VirtualMemoryManager::PageStructureIndizes VirtualMemoryManager::getIndizes(uint64_t virtualAddr){
     VirtualMemoryManager::PageStructureIndizes res;
     virtualAddr >>= 12;

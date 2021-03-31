@@ -2,6 +2,26 @@
 #include "../PMM/PageFrameAllocator.h"
 #include "../VMM/VirtualMemoryManager.h"
 
+
+struct Heap{
+    uint64_t begin;
+    uint64_t end;
+    uint64_t size;
+    Heap(uint64_t b, uint64_t e, uint64_t sz);
+    Heap();
+};
+
+
+//Used for Free List
+struct HeapEntryHeader{
+    uint64_t magicValue = 0xe1efa87e1efa87;
+    uint64_t size;
+    HeapEntryHeader* nextHeader;
+    HeapEntryHeader* previousHeader;
+    HeapEntryHeader(HeapEntryHeader* next, HeapEntryHeader* prev, uint64_t sz);
+};
+
+
 constexpr uint64_t HeapEntryHeaderMagicValue = 0xe1efa87e1efa87;
 Heap kernelHeap;
 HeapEntryHeader* startSec;
@@ -9,7 +29,8 @@ HeapEntryHeader* startSec;
 
 void initHeap(uint64_t begin, uint64_t end){
     kernelHeap = Heap(begin,end,end - begin);
-    *reinterpret_cast<HeapEntryHeader*>(begin) = HeapEntryHeader(reinterpret_cast<HeapEntryHeader*>(begin),reinterpret_cast<HeapEntryHeader*>(begin),(end-begin) - sizeof(HeapEntryHeader));
+    *reinterpret_cast<HeapEntryHeader*>(begin) = HeapEntryHeader(reinterpret_cast<HeapEntryHeader*>(begin)
+    ,reinterpret_cast<HeapEntryHeader*>(begin),(end-begin) - sizeof(HeapEntryHeader));
     startSec = reinterpret_cast<HeapEntryHeader*>(begin);
 }
 
@@ -75,3 +96,6 @@ void* operator new[](size_t sz){
     return operator new(sz);
 }
 void operator delete(void* p){}
+void operator delete[](void* ptr){
+    operator delete(ptr);
+}
