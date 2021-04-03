@@ -5,12 +5,14 @@
 constexpr uint64_t HeapEntryHeaderMagicValue = 0xe1efa87e1efa87;
 Heap kernelHeap;
 HeapEntryHeader* startSec;
+HeapEntryHeader* head;
 
 
 void initHeap(uint64_t begin, uint64_t end){
     kernelHeap = Heap(begin,end,end - begin);
     *reinterpret_cast<HeapEntryHeader*>(begin) = HeapEntryHeader(reinterpret_cast<HeapEntryHeader*>(begin),reinterpret_cast<HeapEntryHeader*>(begin),(end-begin) - sizeof(HeapEntryHeader));
     startSec = reinterpret_cast<HeapEntryHeader*>(begin);
+    head = startSec;
 }
 
 Heap::Heap(uint64_t b, uint64_t e, uint64_t sz)
@@ -74,4 +76,41 @@ void* operator new(size_t sz){
 void* operator new[](size_t sz){
     return operator new(sz);
 }
-void operator delete(void* p){}
+void operator delete(void* p){
+    HeapEntryHeader* seg = reinterpret_cast<HeapEntryHeader*>(reinterpret_cast<uint64_t>(p) - sizeof(HeapEntryHeader));
+    if(seg->magicValue != HeapEntryHeaderMagicValue){
+        //TODO: Panic
+        return;
+    }
+    HeapEntryHeader* node = head;
+    while (reinterpret_cast<uint64_t>(node) < reinterpret_cast<uint64_t> (seg)){
+        node = node->nextHeader;
+    }
+    HeapEntryHeader* prev = node->previousHeader;
+    //Check for unification
+    bool insert = true;
+    if(reinterpret_cast<uint64_t>(prev) + prev->size + sizeof(HeapEntryHeader) == reinterpret_cast<uint64_t>(seg)){
+        prev->size += seg->size + sizeof(HeapEntryHeader);
+        memset((void*)seg,(uint8_t)0,sizeof(HeapEntryHeader));
+        seg = prev;
+        insert = false;
+    }
+    if (reinterpret_cast<uint64_t>(seg) + seg->size + sizeof(HeapEntryHeader) == reinterpret_cast<uint64_t>(node)){
+        seg->size += node->size + sizeof(HeapEntryHeader);
+        seg->nextHeader = node->nextHeader;
+        node->nextHeader->previousHeader = seg;
+        memset((void*)node,(uint8_t)0,sizeof(HeapEntryHeader));
+        insert = false;
+    }
+    //Insert freed block
+    if(insert){
+        prev->nextHeader = seg;
+        node->previousHeader = seg;
+        seg->nextHeader = node;
+        seg->previousHeader = prev;
+    }
+}
+
+void operator delete[](void* p){
+    operator delete(p);
+}
