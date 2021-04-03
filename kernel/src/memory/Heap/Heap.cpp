@@ -54,9 +54,35 @@ HeapEntryHeader* findFreeSegment(size_t sz){
     startSec = seg->nextHeader;
     return seg;
 }
-
-bool growHeap(){
-    return false;
+constexpr uint64_t MIN_HEAP_GROWTH_PAGES = 10;
+bool growHeap(uint64_t to_grow){
+    uint64_t pages = (to_grow / 0x1000) + 1;
+    if (pages < MIN_HEAP_GROWTH_PAGES){
+        pages = MIN_HEAP_GROWTH_PAGES;
+    }
+    for(uint64_t p = 0; p<pages; p++){
+        if(KernelPMM.GetFreeRam() == 0){
+            return false;
+        }
+        uint64_t pf = KernelPMM.RequestPage();
+        KernelVMM.MapMemory(kernelHeap.end + (p * 0x1000), pf);
+    }
+    HeapEntryHeader* tail = head->previousHeader;
+    if (reinterpret_cast<uint64_t>(tail) + tail->size + sizeof(HeapEntryHeader) == kernelHeap.end){
+        tail->size += pages*0x1000;
+    } else {
+        HeapEntryHeader* newEntry = reinterpret_cast<HeapEntryHeader*>(kernelHeap.end);
+        newEntry->size = pages*0x1000 - sizeof(HeapEntryHeader);
+        newEntry->magicValue = HeapEntryHeaderMagicValue;
+        newEntry->nextHeader = head;
+        newEntry->previousHeader = tail;
+        tail->nextHeader = newEntry;
+        head->previousHeader = newEntry;
+    }
+    kernelHeap.end += pages*0x1000;
+    kernelHeap.size += pages*0x1000;
+    return true;
+    
 }
 
 void* operator new(size_t sz){
@@ -65,7 +91,7 @@ void* operator new(size_t sz){
     }
     HeapEntryHeader* seg = findFreeSegment(sz);
     while(seg == nullptr){
-        bool suc = growHeap();
+        bool suc = growHeap(sz);
         if(!suc){
             //TODO Panic (optional)
             //return nullptr;

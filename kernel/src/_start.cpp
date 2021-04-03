@@ -56,6 +56,7 @@ extern "C" void _start(BootInfo* bootinfo){
     }
     delete test;
     delete[] test3;
+    uint64_t* testGrow = new uint64_t[(INIT_HEAP_SIZE + 1) *0x1000];
     //Sets new stack up and calls main with bootinfo as first parameter
     init_stack(bootinfo,reinterpret_cast<uint64_t>(Stack) + STACK_SIZE * 0x1000); 
 }
