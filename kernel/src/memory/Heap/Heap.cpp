@@ -84,6 +84,20 @@ bool growHeap(uint64_t to_grow){
     return true;
     
 }
+constexpr uint64_t HEAP_SHRINK = 10;
+void shrinkHeap(){
+    HeapEntryHeader* tail = head->previousHeader;
+    if(tail->size >= HEAP_SHRINK*2*0x1000){
+        tail->size -= HEAP_SHRINK * 0x1000;
+        kernelHeap.size -= HEAP_SHRINK*0x1000;
+        for(uint64_t p = 1; p <= HEAP_SHRINK; p++){
+            uint64_t pf = KernelVMM.GetMapping(kernelHeap.end - (p*0x1000));
+            KernelVMM.UnmapMemory(kernelHeap.end - (p*0x1000));
+            KernelPMM.FreePage(pf);
+        }
+        kernelHeap.end -= HEAP_SHRINK*0x1000;
+    }
+}
 
 void* operator new(size_t sz){
     if(sz%8 != 0){
@@ -156,6 +170,8 @@ void operator delete(void* p,uint64_t sz){
         seg->nextHeader = node;
         seg->previousHeader = prev;
     }
+    HeapEntryHeader* tail = head->previousHeader;
+    shrinkHeap();
 }
 
 void operator delete[](void* p){

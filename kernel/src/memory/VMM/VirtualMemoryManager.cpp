@@ -53,6 +53,79 @@ void VirtualMemoryManager::MapMemory(const uint64_t virtAddr, const uint64_t phy
     PT->entries[indizes.P_i] = PDE;
 }
 
+void VirtualMemoryManager::UnmapMemory(const uint64_t virtualAddr){
+    VirtualMemoryManager::PageStructureIndizes indizes = getIndizes(virtualAddr);
+    PageDirectoryEntry PDE;
+    PDE = PML4Address->entries[indizes.PDP_i];
+    PageTable* PDP;
+    if(!PDE.GetFlag(PT_Flag::Present)){
+        return;
+    } else {
+        PDP = reinterpret_cast<PageTable*>(reinterpret_cast<uint64_t>(PDE.GetAddress()) << 12);
+    }
+    PDE = PDP->entries[indizes.PD_i];
+    PageTable* PD;
+    if(!PDE.GetFlag(PT_Flag::Present)){
+        return;
+    } else {
+        PD = reinterpret_cast<PageTable*>(reinterpret_cast<uint64_t>(PDE.GetAddress()) << 12);
+    }
+    PDE = PD->entries[indizes.PT_i];
+    PageTable* PT;
+    if(!PDE.GetFlag(PT_Flag::Present)){
+        return;
+    } else {
+        PT = reinterpret_cast<PageTable*>(reinterpret_cast<uint64_t>(PDE.GetAddress()) << 12);
+    }
+
+    memset(&PT->entries[indizes.P_i],uint8_t(0),sizeof(PageDirectoryEntry));
+    if(memcmp((void*)PT,(uint8_t)0,0x1000)){
+        uint64_t pf = this->GetMapping(reinterpret_cast<uint64_t>(PT));
+        KernelPMM.FreePage(pf);
+        if(memcmp((void*)PD,(uint8_t)0,0x1000)){
+            uint64_t pf = this->GetMapping(reinterpret_cast<uint64_t>(PD));
+            KernelPMM.FreePage(pf);
+            if(memcmp((void*)PDP,(uint8_t)0,0x1000)){
+                uint64_t pf = this->GetMapping(reinterpret_cast<uint64_t>(PDP));
+                KernelPMM.FreePage(pf);
+            }
+        }
+
+    }
+
+
+}
+uint64_t VirtualMemoryManager::GetMapping(const uint64_t virtualAddr){
+    VirtualMemoryManager::PageStructureIndizes indizes = getIndizes(virtualAddr);
+    PageDirectoryEntry PDE;
+    PDE = PML4Address->entries[indizes.PDP_i];
+    PageTable* PDP;
+    if(!PDE.GetFlag(PT_Flag::Present)){
+        return -1;
+    } else {
+        PDP = reinterpret_cast<PageTable*>(reinterpret_cast<uint64_t>(PDE.GetAddress()) << 12);
+    }
+    PDE = PDP->entries[indizes.PD_i];
+    PageTable* PD;
+    if(!PDE.GetFlag(PT_Flag::Present)){
+        return -1;
+    } else {
+        PD = reinterpret_cast<PageTable*>(reinterpret_cast<uint64_t>(PDE.GetAddress()) << 12);
+    }
+    PDE = PD->entries[indizes.PT_i];
+    PageTable* PT;
+    if(!PDE.GetFlag(PT_Flag::Present)){
+        return -1;
+    } else {
+        PT = reinterpret_cast<PageTable*>(reinterpret_cast<uint64_t>(PDE.GetAddress()) << 12);
+    }
+    if(PDE.GetFlag(PT_Flag::Present)){
+        return PT->entries[indizes.P_i].GetAddress();
+    } else {
+        return -1;
+    }
+}
+
 VirtualMemoryManager::PageStructureIndizes VirtualMemoryManager::getIndizes(uint64_t virtualAddr){
     VirtualMemoryManager::PageStructureIndizes res;
     virtualAddr >>= 12;

@@ -5,6 +5,8 @@ class VirtualMemoryManager{
         VirtualMemoryManager(PageTable* PML4Addr);
         VirtualMemoryManager();
         void MapMemory(const uint64_t virtualAddr, const uint64_t physicalAddr);
+        void UnmapMemory(const uint64_t virtualAddr);
+        uint64_t GetMapping(const uint64_t virtualAddr);
     private:
         PageTable* PML4Address;
         struct PageStructureIndizes{
