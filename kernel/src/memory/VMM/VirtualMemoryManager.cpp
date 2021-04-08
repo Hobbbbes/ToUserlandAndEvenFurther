@@ -78,6 +78,10 @@ void VirtualMemoryManager::UnmapMemory(const uint64_t virtualAddr){
         PT = reinterpret_cast<PageTable*>(reinterpret_cast<uint64_t>(PDE.GetAddress()) << 12);
     }
 
+<<<<<<< HEAD
+    PDE = PT->entries[indizes.P_i];
+    PT->entries[indizes.P_i].clear();
+=======
     memset(&PT->entries[indizes.P_i],uint8_t(0),sizeof(PageDirectoryEntry));
     if(memcmp((void*)PT,(uint8_t)0,0x1000)){
         uint64_t pf = this->GetMapping(reinterpret_cast<uint64_t>(PT));
@@ -124,6 +128,7 @@ uint64_t VirtualMemoryManager::GetMapping(const uint64_t virtualAddr){
     } else {
         return -1;
     }
+>>>>>>> b0d91cfaa4c0a12766efbb3394aaace621d3ddc8
 }
 
 VirtualMemoryManager::PageStructureIndizes VirtualMemoryManager::getIndizes(uint64_t virtualAddr){

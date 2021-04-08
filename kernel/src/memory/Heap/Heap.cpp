@@ -26,7 +26,8 @@ HeapEntryHeader* head;
 
 void initHeap(uint64_t begin, uint64_t end){
     kernelHeap = Heap(begin,end,end - begin);
-    *reinterpret_cast<HeapEntryHeader*>(begin) = HeapEntryHeader(reinterpret_cast<HeapEntryHeader*>(begin),reinterpret_cast<HeapEntryHeader*>(begin),(end-begin) - sizeof(HeapEntryHeader));
+    *reinterpret_cast<HeapEntryHeader*>(begin) = HeapEntryHeader(reinterpret_cast<HeapEntryHeader*>(begin)
+    ,reinterpret_cast<HeapEntryHeader*>(begin),(end-begin) - sizeof(HeapEntryHeader));
     startSec = reinterpret_cast<HeapEntryHeader*>(begin);
     head = startSec;
 }
