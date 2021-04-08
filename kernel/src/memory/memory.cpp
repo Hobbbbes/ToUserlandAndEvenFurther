@@ -20,3 +20,19 @@ void memset(void* start, uint32_t value, uint64_t num){
         *reinterpret_cast<uint32_t*>(reinterpret_cast<uint64_t>(start) + i) = value;
     }
 }
+bool memcmp(const void* first,const  void* second, const uint64_t count){
+    for(uint64_t i = 0; i<count; i++){
+        if(reinterpret_cast<const uint8_t*>(first)[i] != reinterpret_cast<const uint8_t*>(second)[i]){
+            return false;
+        }
+    }
+    return true;
+}
+bool memcmp(const void* start, const uint8_t val, const uint64_t count){
+    for(uint64_t i = 0; i<count;i++){
+        if(reinterpret_cast<const uint8_t*>(start)[i] != val){
+            return false;
+        }
+    }
+    return true;
+}

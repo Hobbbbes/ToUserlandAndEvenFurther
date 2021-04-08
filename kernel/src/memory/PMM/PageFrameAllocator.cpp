@@ -115,5 +115,7 @@ uint64_t PageFrameAllocator::RequestPage(){
         addr = pageStack.Pop();
     }while(pageBitmap[addr / 0x1000]); //As long as pages outputed by stack are in use
     pageBitmap.Set(addr / 0x1000, false);
+    usedMemory += 0x1000;
+    freeMemory -= 0x1000;
     return addr;
 }

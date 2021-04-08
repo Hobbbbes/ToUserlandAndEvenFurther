@@ -2,12 +2,11 @@
 OSNAME = ToUserlandAndEvenFurther
 
 GNUEFI = ../bootloader
-OVMFDIR = ../OVMFbin
 LDS = kernel.ld
 CC = gcc
 ASMC = nasm
 LD = ld
-CFLAGS = -ffreestanding -fshort-wchar -mno-red-zone -g
+CFLAGS = -ffreestanding -fshort-wchar -mno-red-zone -std=c++17 -g 
 ASMFLAGS = 
 LDFLAGS = -T $(LDS) -static -Bsymbolic -nostdlib
 
@@ -62,7 +61,7 @@ clean:
 	rm -f $(BUILDDIR)/CustomOS.img $(BUILDDIR)/kernel.elf
 
 run:
-	qemu-system-x86_64 -drive file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -drive if=pflash,format=raw,unit=0,file="$(OVMFDIR)/OVMF_CODE-pure-efi.fd",readonly=on -drive if=pflash,format=raw,unit=1,file="$(OVMFDIR)/OVMF_VARS-pure-efi.fd" -net none
+	qemu-system-x86_64 -drive file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -bios /usr/share/ovmf/x64/OVMF.fd -net none
 debug:
-	qemu-system-x86_64 -drive file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -drive if=pflash,format=raw,unit=0,file="$(OVMFDIR)/OVMF_CODE-pure-efi.fd",readonly=on -drive if=pflash,format=raw,unit=1,file="$(OVMFDIR)/OVMF_VARS-pure-efi.fd" -net none -s&
-	gdb -tui -ex "target remote localhost:1234" -ex "symbol-file bin/kernel.elf" -ex "set disassembly-flavor intel"
+	qemu-system-x86_64 -drive file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -bios /usr/share/ovmf/x64/OVMF.fd -net none -s&
+	gdb -tui -ex "target remote localhost:1234" -ex "symbol-file bin/kernel.elf" -ex "set disassembly-flavor intel" -ex "focus cmd"

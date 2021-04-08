@@ -23,7 +23,7 @@ void IdentityMapPhysicalMemory(BootInfo* bi){
 }
 
 void InitHeap(){
-    for(uint64_t i = 0; i<=INIT_HEAP_SIZE;i++){
+    for(uint64_t i = 0; i<INIT_HEAP_SIZE;i++){
         uint64_t page = KernelPMM.RequestPage();
         KernelVMM.MapMemory(HEAP_START + (i * 0x1000), page);
     }
@@ -47,12 +47,17 @@ extern "C" void _start(BootInfo* bootinfo){
 
 
     int* test = new int;
-    int* test2 = new int[20];
+    int* test3 = new int[20];
+    int* test2 = test3;
     *test = 0xf0f0f0f0;
     for(int i = 0; i<20;i++){
         *test2 = 0xefefefef;
         test2++;
     }
+    uint8_t* testGrow = new uint8_t[(INIT_HEAP_SIZE + 1) *0x1000];
+    delete test;
+    delete[] test3;
+    
     //Sets new stack up and calls main with bootinfo as first parameter
     init_stack(bootinfo,reinterpret_cast<uint64_t>(Stack) + STACK_SIZE * 0x1000); 
 }
