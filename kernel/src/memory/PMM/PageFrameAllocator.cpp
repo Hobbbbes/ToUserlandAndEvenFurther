@@ -23,7 +23,7 @@ PageFrameAllocator::PageFrameAllocator(EFI_MEMORY_DESCRIPTOR* mMap, uint64_t mMa
     pageStack = PageStack(reinterpret_cast<uint64_t*>(largestFreeMemSeg), reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(largestFreeMemSeg) + pageStackSize));
     uint64_t bitmapSize = memorySize / 4096 / 8 + 1;
     if(largestFreeMemSegSize - pageStackSize - 1 <= bitmapSize) return; //Real Problem
-    pageBitmap = Bitmap(bitmapSize,reinterpret_cast<uint8_t*>(reinterpret_cast<uint64_t>(largestFreeMemSeg) + pageStackSize + 1));
+    pageBitmap = Util::Bitmap(bitmapSize,reinterpret_cast<uint8_t*>(reinterpret_cast<uint64_t>(largestFreeMemSeg) + pageStackSize + 1));
 
     LockPages(reinterpret_cast<uint64_t>(largestFreeMemSeg), (1 + pageStackSize + bitmapSize) / 0x1000 + 1);
 

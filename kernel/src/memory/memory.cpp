@@ -36,3 +36,9 @@ bool memcmp(const void* start, const uint8_t val, const uint64_t count){
     }
     return true;
 }
+
+void memcpy(const void* source, void* dest, const uint64_t count){
+    for(uint64_t i = 0; i<count;i++){
+        reinterpret_cast<uint8_t*>(dest)[i] = reinterpret_cast<const uint8_t*>(source)[i];
+    }
+}

@@ -28,7 +28,7 @@ class PageFrameAllocator{
         uint64_t reservedMemory = 0;
         uint64_t usedMemory = 0;
         PageStack pageStack;
-        Bitmap pageBitmap;
+        Util::Bitmap pageBitmap;
         bool InitializedSuccessfully = false;
 };
 extern PageFrameAllocator KernelPMM;

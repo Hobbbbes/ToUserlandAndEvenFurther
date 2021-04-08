@@ -23,7 +23,7 @@ class PageStack{
             return reinterpret_cast<uint64_t>(bufferEnd) - reinterpret_cast<uint64_t>(bufferStart);
         }
 
-        inline void InitPush(const Bitmap &pageBitmap){
+        inline void InitPush(const Util::Bitmap &pageBitmap){
             for(uint64_t i = 0; i<pageBitmap.Size(); i++){
                 if(! pageBitmap[i]){
                     Push(i * 0x1000);
