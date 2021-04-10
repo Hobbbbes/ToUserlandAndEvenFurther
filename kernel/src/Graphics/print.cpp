@@ -31,7 +31,11 @@ namespace Graphics{
                 }
             }
             if(pos.y + 16 > fb.Height){
-                memcpy(reinterpret_cast<void*>(reinterpret_cast<uint64_t>(fb.BaseAddress) + fb.Width*8*16),fb.BaseAddress,fb.BufferSize);
+                memcpy(reinterpret_cast<void*>(reinterpret_cast<uint64_t>(fb.BaseAddress)
+                 + fb.PixelsPerScanLine*16*sizeof(uint32_t)),fb.BaseAddress,fb.BufferSize -  fb.PixelsPerScanLine*16*sizeof(uint32_t));
+                 pos.y -= 16;
+                 memset(reinterpret_cast<void*>(reinterpret_cast<uint64_t>(fb.BaseAddress)
+                 + fb.BufferSize - fb.PixelsPerScanLine*16*sizeof(uint32_t)),(uint32_t)0,fb.PixelsPerScanLine*16);
             }
             chr++;
         }

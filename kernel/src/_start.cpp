@@ -19,7 +19,7 @@ void IdentityMapPhysicalMemory(BootInfo* bi){
         addr < bi->framebuffer->BufferSize + reinterpret_cast<uint64_t>(bi->framebuffer->BaseAddress); addr += 0x1000){
         KernelVMM.MapMemory(addr,addr);
     }
-
+    memset(bi->framebuffer->BaseAddress,(uint8_t)0,bi->framebuffer->BufferSize);
 }
 
 void InitHeap(){
