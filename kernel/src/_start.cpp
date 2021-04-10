@@ -16,7 +16,7 @@ void IdentityMapPhysicalMemory(BootInfo* bi){
     }
 
     for(uint64_t addr = reinterpret_cast<uint64_t>(bi->framebuffer->BaseAddress);
-        addr < bi->framebuffer->BufferSize; addr++){
+        addr < bi->framebuffer->BufferSize; addr += 0x1000){
         KernelVMM.MapMemory(addr,addr);
     }
 
@@ -46,18 +46,6 @@ extern "C" void _start(BootInfo* bootinfo){
     InitHeap();
 
 
-    int* test = new int;
-    int* test3 = new int[20];
-    int* test2 = test3;
-    *test = 0xf0f0f0f0;
-    for(int i = 0; i<20;i++){
-        *test2 = 0xefefefef;
-        test2++;
-    }
-    uint8_t* testGrow = new uint8_t[(INIT_HEAP_SIZE + 1) *0x1000];
-    delete test;
-    delete[] test3;
-    
     //Sets new stack up and calls main with bootinfo as first parameter
-    init_stack(bootinfo,reinterpret_cast<uint64_t>(Stack) + STACK_SIZE * 0x1000); 
+    init_stack(bootinfo,reinterpret_cast<uint64_t>(Stack) + (STACK_SIZE * 0x1000) - 8); 
 }

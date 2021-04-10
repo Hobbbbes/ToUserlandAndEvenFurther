@@ -19,10 +19,14 @@ PageFrameAllocator::PageFrameAllocator(EFI_MEMORY_DESCRIPTOR* mMap, uint64_t mMa
         }
     }
     uint64_t pageStackSize = (memorySize / 0x1000) * 8;
-    if(largestFreeMemSegSize <= pageStackSize) return; //Real Problem
+    if(largestFreeMemSegSize <= pageStackSize) {
+        while(true){}
+    } //Real Problem
     pageStack = PageStack(reinterpret_cast<uint64_t*>(largestFreeMemSeg), reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(largestFreeMemSeg) + pageStackSize));
     uint64_t bitmapSize = memorySize / 4096 / 8 + 1;
-    if(largestFreeMemSegSize - pageStackSize - 1 <= bitmapSize) return; //Real Problem
+    if(largestFreeMemSegSize - pageStackSize - 1 <= bitmapSize) {
+        while(true){}
+    } //Real Problem
     pageBitmap = Util::Bitmap(bitmapSize,reinterpret_cast<uint8_t*>(reinterpret_cast<uint64_t>(largestFreeMemSeg) + pageStackSize + 1));
 
     LockPages(reinterpret_cast<uint64_t>(largestFreeMemSeg), (1 + pageStackSize + bitmapSize) / 0x1000 + 1);
@@ -68,7 +72,7 @@ void PageFrameAllocator::UnreservePage(uint64_t address){
     pageStack.Push(address);
 }
 void PageFrameAllocator::ReservePage(uint64_t address){
-    uint64_t index = reinterpret_cast<uint64_t>(address) / 4096;
+    uint64_t index = reinterpret_cast<uint64_t>(address) / 0x1000;
     if(pageBitmap[index] == true) return;
     if(pageBitmap.Set(index,true)){
         freeMemory -= 4096;
@@ -95,7 +99,7 @@ void PageFrameAllocator::UnreservePages(uint64_t address, uint64_t pageCount){
 
 void PageFrameAllocator::ReservePages(uint64_t address, uint64_t pageCount){
     for(uint64_t i = 0; i< pageCount; i++){
-        ReservePage(address + (i * 4096));
+        ReservePage(address + (i * 0x1000));
     }
 }
 
