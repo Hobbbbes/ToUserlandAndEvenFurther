@@ -2,7 +2,7 @@
 #include "../memory/memory.h"
 namespace Graphics{
     TextDrawer::TextDrawer(FrameBuffer &fb, PSF1_FONT &font): fb(fb), pos(0,0), font(font){}
-    void TextDrawer::putChar(const char c, uint32_t yOff, uint32_t xOff){
+    void TextDrawer::putChar(const char c, uint32_t xOff, uint32_t yOff){
         uint32_t* pixPtr = (uint32_t*)fb.BaseAddress;
         char* fontPtr = (char*)font.glyphBuffer + (c * font.psf1_Header->charsize);
         for (uint64_t y = yOff; y<yOff + 16; y++){

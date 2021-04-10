@@ -16,7 +16,7 @@ void IdentityMapPhysicalMemory(BootInfo* bi){
     }
 
     for(uint64_t addr = reinterpret_cast<uint64_t>(bi->framebuffer->BaseAddress);
-        addr < bi->framebuffer->BufferSize; addr += 0x1000){
+        addr < bi->framebuffer->BufferSize + reinterpret_cast<uint64_t>(bi->framebuffer->BaseAddress); addr += 0x1000){
         KernelVMM.MapMemory(addr,addr);
     }
 
