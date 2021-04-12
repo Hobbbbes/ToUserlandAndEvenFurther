@@ -40,5 +40,5 @@ namespace Graphics{
             chr++;
         }
     }
-    
+    TextDrawer KernelDrawer;
 }

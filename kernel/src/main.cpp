@@ -1,10 +1,6 @@
 #include "PreBoot/Bootinfo.h"
 #include "KernelUtil.h"
-struct Test{
-    uint64_t test1;
-    char test2;
-    Test* next;
-};
+
 void main(BootInfo* bootinfo){
     int* test = new int;
     int* test3 = new int[20];
@@ -16,11 +12,10 @@ void main(BootInfo* bootinfo){
     }
     delete test;
     delete[] test3;
-    Test t = {32,'a', &t};
-    Graphics::TextDrawer d(*bootinfo->framebuffer,*bootinfo->psf1_font);
-    for(int i = 0; i>-128;i--){
-        for(int b = 0; b<50000000;b++){}
-        d.print(i).print("\n");
-    }
+    Graphics::TextDrawer t(*bootinfo->framebuffer,*bootinfo->psf1_font);
+    Util::string s("Hello World");
+    s = s + "Hello as well";
+    Util::string s2(Util::string("Hello"));
+    t.print(std::is_move_constructible<Util::string>::value);
     while(true);
 }

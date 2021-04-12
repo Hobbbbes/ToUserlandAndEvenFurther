@@ -33,6 +33,9 @@ namespace Graphics{
                     printFloat(v);
                 } else if constexpr(std::is_same<T,double>::value){
                     printDouble(v);
+                } else if constexpr(std::is_same<T,bool>::value) {
+                    if(v){putString("True");}
+                    else{putString("False");} 
                 } else if (S == Print_Specifier::Standart) {
                     constexpr bool has_toString = requires(const T& t) {
                         t.toString();
@@ -113,4 +116,5 @@ namespace Graphics{
             void printFloat(const float f);
             void printDouble(const double d);
     };
+    extern TextDrawer KernelDrawer;
 }
