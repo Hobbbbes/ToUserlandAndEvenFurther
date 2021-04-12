@@ -6,7 +6,7 @@ LDS = kernel.ld
 CC = gcc
 ASMC = nasm
 LD = ld
-CFLAGS = -ffreestanding -fshort-wchar -mno-red-zone -std=c++20 -fno-exceptions -g 
+CFLAGS = -ffreestanding -fshort-wchar -mno-red-zone -std=c++20 -Iinclude -fno-exceptions -g 
 ASMFLAGS = 
 LDFLAGS = -T $(LDS) -static -Bsymbolic -nostdlib
 

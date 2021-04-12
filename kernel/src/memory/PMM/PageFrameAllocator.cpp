@@ -1,5 +1,5 @@
-#include "PageFrameAllocator.h"
-#include "../../Util/panic.h"
+#include "memory/PMM/PageFrameAllocator.h"
+#include "Util/panic.h"
 PageFrameAllocator KernelPMM;
 
 PageFrameAllocator::PageFrameAllocator(EFI_MEMORY_DESCRIPTOR* mMap, uint64_t mMapSize, uint64_t mMapDescSize){

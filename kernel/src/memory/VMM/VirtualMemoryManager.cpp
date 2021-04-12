@@ -1,6 +1,6 @@
-#include "VirtualMemoryManager.h"
-#include "../PMM/PageFrameAllocator.h"
-#include "../memory.h"
+#include "memory/VMM/VirtualMemoryManager.h"
+#include "memory/PMM/PageFrameAllocator.h"
+#include "memory/memory.h"
 VirtualMemoryManager KernelVMM;
 
 VirtualMemoryManager::VirtualMemoryManager(PageTable* PML4Addr) : PML4Address(PML4Addr){}

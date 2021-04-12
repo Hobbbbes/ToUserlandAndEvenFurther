@@ -1,5 +1,5 @@
-#include "print.h"
-#include "../memory/memory.h"
+#include "Graphics/print.h"
+#include "memory/memory.h"
 namespace Graphics{
     TextDrawer::TextDrawer(FrameBuffer &fb, PSF1_FONT &font): fb(fb), pos(0,0), font(font){}
     void TextDrawer::putChar(const char c, uint32_t xOff, uint32_t yOff){

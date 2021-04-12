@@ -1,5 +1,5 @@
-#include "string.h"
-#include "../memory/memory.h"
+#include "Util/string.h"
+#include "memory/memory.h"
 namespace Util{
     string::~string(){
         delete[] buf;

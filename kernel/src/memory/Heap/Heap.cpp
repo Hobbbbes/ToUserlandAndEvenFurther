@@ -1,7 +1,7 @@
-#include "Heap.h"
-#include "../PMM/PageFrameAllocator.h"
-#include "../VMM/VirtualMemoryManager.h"
-#include "../../Util/panic.h"
+#include "memory/Heap/Heap.h"
+#include "memory/PMM/PageFrameAllocator.h"
+#include "memory/VMM/VirtualMemoryManager.h"
+#include "Util/panic.h"
 struct Heap{
     uint64_t begin;
     uint64_t end;

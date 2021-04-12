@@ -1,4 +1,4 @@
-#include "Bitmap.h"
+#include "Util/Bitmap.h"
 namespace Util{
     Bitmap::Bitmap(const uint64_t bitmapSize,uint8_t* bufferAddr)
     : _Size(bitmapSize), Buffer(bufferAddr)
