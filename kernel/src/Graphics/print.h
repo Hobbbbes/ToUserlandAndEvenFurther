@@ -5,9 +5,11 @@
 #include <type_traits>
 #include <limits>
 namespace Graphics{
+    constexpr uint32_t Red = 0x00ff0000;
     class TextDrawer{
         public:
             TextDrawer(FrameBuffer &fb, PSF1_FONT &font);
+            TextDrawer(){}
             TextDrawer& setColor(const uint32_t c);
             enum class Print_Specifier{
                 Hex,Standart

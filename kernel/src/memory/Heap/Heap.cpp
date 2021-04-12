@@ -1,6 +1,7 @@
 #include "Heap.h"
 #include "../PMM/PageFrameAllocator.h"
 #include "../VMM/VirtualMemoryManager.h"
+#include "../../Util/panic.h"
 struct Heap{
     uint64_t begin;
     uint64_t end;
@@ -49,7 +50,7 @@ HeapEntryHeader* findFreeSegment(size_t sz){
         if(seg == startSec){
             return nullptr;
         } else if(seg->magicValue != HeapEntryHeaderMagicValue){
-            //TODO Panic
+            Util::Panic("Heap corruption detected");
         }
     }
     startSec = seg->nextHeader;
@@ -108,8 +109,7 @@ void* operator new(size_t sz){
     while(seg == nullptr){
         bool suc = growHeap(sz);
         if(!suc){
-            //TODO Panic (optional)
-            //return nullptr;
+            Util::Panic("Physical Memory exhausted");
         }
         seg = findFreeSegment(sz);
     }
@@ -138,7 +138,7 @@ void* operator new[](size_t sz){
 void operator delete(void* p,uint64_t sz){
     HeapEntryHeader* seg = reinterpret_cast<HeapEntryHeader*>(reinterpret_cast<uint64_t>(p) - sizeof(HeapEntryHeader));
     if(seg->magicValue != HeapEntryHeaderMagicValue){
-        //TODO: Panic
+        Util::Panic("Heap corruption detected");
         return;
     }
     HeapEntryHeader* node = head;

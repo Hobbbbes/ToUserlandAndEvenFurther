@@ -1,4 +1,5 @@
 #include "PageFrameAllocator.h"
+#include "../../Util/panic.h"
 PageFrameAllocator KernelPMM;
 
 PageFrameAllocator::PageFrameAllocator(EFI_MEMORY_DESCRIPTOR* mMap, uint64_t mMapSize, uint64_t mMapDescSize){
@@ -20,12 +21,12 @@ PageFrameAllocator::PageFrameAllocator(EFI_MEMORY_DESCRIPTOR* mMap, uint64_t mMa
     }
     uint64_t pageStackSize = (memorySize / 0x1000) * 8;
     if(largestFreeMemSegSize <= pageStackSize) {
-        while(true){}
+        Util::Panic("Largest free memory segment is smaller than size required for PageStack");
     } //Real Problem
     pageStack = PageStack(reinterpret_cast<uint64_t*>(largestFreeMemSeg), reinterpret_cast<uint64_t*>(reinterpret_cast<uint64_t>(largestFreeMemSeg) + pageStackSize));
     uint64_t bitmapSize = memorySize / 4096 / 8 + 1;
     if(largestFreeMemSegSize - pageStackSize - 1 <= bitmapSize) {
-        while(true){}
+        Util::Panic("Largest free memory segment is smaller than size required for Bitmap and PageStack");
     } //Real Problem
     pageBitmap = Util::Bitmap(bitmapSize,reinterpret_cast<uint8_t*>(reinterpret_cast<uint64_t>(largestFreeMemSeg) + pageStackSize + 1));
 

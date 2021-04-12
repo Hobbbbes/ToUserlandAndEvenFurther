@@ -40,5 +40,9 @@ namespace Graphics{
             chr++;
         }
     }
+    TextDrawer& TextDrawer::setColor(const uint32_t c){
+        color = c;
+        return *this;
+    }
     TextDrawer KernelDrawer;
 }
