@@ -54,7 +54,7 @@ namespace Graphics{
             uint32_t color = 0xffffffff;
             template<typename T>
             void printIntUnsigned(const T v){
-                static_assert(std::is_same_v<T, uint64_t> || std::is_same_v<T, uint32_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint8_t>);
+                static_assert(std::is_same<T, uint64_t>::value || std::is_same<T, uint32_t>::value || std::is_same<T, uint16_t>::value || std::is_same<T, uint8_t>::value);
                 T value = v;
                 uint8_t index = 0;
                 char s[21];
@@ -70,9 +70,30 @@ namespace Graphics{
                 putString(reinterpret_cast<const char*>(reinterpret_cast<uint64_t>(s) + (19-index)));
             }
             template<typename T>
-            void printIntSigned(const T value){
-                static_assert(std::is_same_v<T, int64_t> || std::is_same_v<T, int32_t> || std::is_same_v<T, int16_t> || std::is_same_v<T, int8_t>);
-
+            void printIntSigned(const T v){
+                static_assert(std::is_same<T, int64_t>::value || std::is_same<T, int32_t>::value || std::is_same<T, int16_t>::value || std::is_same<T, int8_t>::value);
+                bool negativ;
+                T value = v;
+                if(value < 0){
+                    negativ = true;
+                    value *= -1;
+                }
+                uint8_t index = 0;
+                char s[22];
+                while(value / 10 > 0){
+                    uint8_t remainder = value % 10;
+                    value /= 10;
+                    s[20 - index] = remainder + '0';
+                    index++;
+                }
+                uint8_t remainder = value % 10;
+                s[20 - index] = remainder + '0';
+                s[21] = '\0';
+                if(negativ){
+                    index++;
+                    s[20 - index] = '-';
+                }
+                putString(reinterpret_cast<const char*>(reinterpret_cast<uint64_t>(s) + (20-index)));
             }
             template<typename T>
             void printIntHex(const T value){

@@ -18,9 +18,9 @@ void main(BootInfo* bootinfo){
     delete[] test3;
     Test t = {32,'a', &t};
     Graphics::TextDrawer d(*bootinfo->framebuffer,*bootinfo->psf1_font);
-    for(int i = 0; i<128;i++){
+    for(int i = 0; i>-128;i--){
         for(int b = 0; b<50000000;b++){}
-        d.print<Test,Graphics::TextDrawer::Print_Specifier::Hex>(t).print("\n");
+        d.print(i).print("\n");
     }
     while(true);
 }
