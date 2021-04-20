@@ -12,10 +12,26 @@ struct GDTEntry{
     uint16_t Base0;
     uint8_t Base1;
     uint8_t Accessed :1;
-    uint8_t Writable :1;
-    uint8_t Expansion_Direction :1;
+    union {
+        uint8_t Writable :1; //Data-Segment Descriptor
+        uint8_t Readable :1; //Code-Segment Descriptor
+    };
+    union {
+        uint8_t Expansion_Direction :1; //Data-Segment Descriptor
+        uint8_t Conforming :1; //Code-Segment Descriptor
+    };
+    uint8_t SegmentType :1; //1 in Code Segments, 0 in DataSegments
+    uint8_t One :1 = 1;
+    uint8_t DPL :2;
+    uint8_t Present :1;
+    uint8_t Limit1 :4;
+    uint8_t AVL :1;
     uint8_t Null :1 = 0;
-    uint8_t Limit1_Flags;
+    union{
+        uint8_t Big :1; //Code-Segment Descriptor
+        uint8_t Default :1; //Data-Segment Descriptor
+    };
+    uint8_t Granularity :1;
     uint8_t Base2;
 }__attribute__((packed));
 
