@@ -36,7 +36,7 @@ void MapStack(){
     }
 }
 
-extern "C" void _start(BootInfo* bootinfo){
+extern "C" void _start(BootInfo* bootinfo) {
     Graphics::KernelDrawer = Graphics::TextDrawer(*bootinfo->framebuffer,*bootinfo->psf1_font);
     
     KernelPMM = PageFrameAllocator(bootinfo->mMap,bootinfo->mMapSize,bootinfo->mMapDescriptorSize);
