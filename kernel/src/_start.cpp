@@ -1,10 +1,7 @@
 #include "PreBoot/Bootinfo.h"
 #include "KernelUtil.h"
 #include "Graphics/print.h"
-#define INIT_HEAP_SIZE 10
-#define HEAP_START 0x400000000000 //64TB
-#define STACK_START 0x600000000000 // 96TB
-#define STACK_SIZE 20
+#include "memory/memory_defines.h"
 
 extern "C" void init_stack(BootInfo* BootInfo, uint64_t stackBase);
 

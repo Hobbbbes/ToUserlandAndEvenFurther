@@ -1,13 +1,36 @@
 #include "memory/GDT/gdt.h"
-/*
-__attribute((aligned(0x1000)))
-GDT DefaultGDT = {
-    {0,0,0,0x00,0x00,0},//Null
-    {0,0,0,0x9a,0xa0,0}, //Kernel Code Segment
-    {0,0,0,0x92,0xa0,0}, //Kernel Data Segment
-    {0,0,0,0x00,0x00,0}, //User NULL Segment
-    {0,0,0,0x9a,0xa0,0}, //User Code Segment
-    {0,0,0,0x92,0xa0,0}, //User Data Segment
-    //TODO Change privilige Levels for User Segments
-};
-*/
+#include "memory/memory.h"
+extern "C" void LoadGDT(GDTDescriptor* gdt);
+void SetupGDT(){
+    uint64_t pf = KernelPMM.RequestPage();
+    KernelVMM.MapMemory(GDT_VIRTUAL_MEMORY_POS,pf);
+    GDT* gdt = reinterpret_cast<GDT*>(GDT_VIRTUAL_MEMORY_POS);
+    memset(gdt,(uint32_t)0,0x1000/32); //Set page and therefor Null Segments to 0
+    gdt->KernelCode = GDTEntry();
+    gdt->KernelData = GDTEntry();
+    gdt->UserCode = GDTEntry();
+    gdt->UserData = GDTEntry();
+
+    gdt->KernelCode.flags.DPL = 0;
+    gdt->KernelCode.flags.Present = 1;
+    gdt->KernelCode.flags.Read_Write = 1;
+    gdt->KernelCode.flags.DescriptorType = 1;
+    gdt->KernelData.flags.DPL = 0;
+    gdt->KernelData.flags.Present = 1;
+    gdt->KernelData.flags.Read_Write = 1;
+    gdt->KernelData.flags.DescriptorType = 0;
+
+    gdt->UserCode.flags.DPL = 3;
+    gdt->UserCode.flags.Present = 1;
+    gdt->UserCode.flags.Read_Write = 1;
+    gdt->UserCode.flags.DescriptorType = 1;
+    gdt->UserData.flags.DPL = 3;
+    gdt->UserData.flags.Present = 1;
+    gdt->UserData.flags.Read_Write = 1;
+    gdt->UserData.flags.DescriptorType = 0;
+
+    GDTDescriptor gdtDesc;
+    gdtDesc.Offset = reinterpret_cast<uint64_t>(gdt);
+    gdtDesc.Size = sizeof(GDT);
+    LoadGDT(&gdtDesc);
+}
