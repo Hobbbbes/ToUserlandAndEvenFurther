@@ -60,6 +60,9 @@ clean:
 	rm -f $(OBJS) 
 	rm -f $(BUILDDIR)/CustomOS.img $(BUILDDIR)/kernel.elf
 
+run_cpu_reset:
+	qemu-system-x86_64 -drive file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -bios /usr/share/ovmf/x64/OVMF.fd -d cpu_reset -net none
+
 run:
 	qemu-system-x86_64 -drive file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -bios /usr/share/ovmf/x64/OVMF.fd -net none
 debug:

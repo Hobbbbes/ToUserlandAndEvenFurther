@@ -23,7 +23,7 @@ struct GDTEntry{
         uint8_t AVL :1;
         uint8_t LongMode :1 = 1; //Is 64 Bit Segment
         uint8_t Big_Default :1; //Big in Code-Segment Descriptor, Default in Data-Segment Descriptor
-        uint8_t Granularity :1;
+        uint8_t Granularity :1 = 1;
     };
     Flags flags;
     uint8_t Base2;
@@ -36,6 +36,6 @@ struct GDT{
     GDTEntry UserNull;
     GDTEntry UserCode;
     GDTEntry UserData;
-}__attribute__((packed)) __attribute((aligned(0x1000)));
+}__attribute__((packed));
 
 void SetupGDT();

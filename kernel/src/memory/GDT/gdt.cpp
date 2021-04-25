@@ -14,23 +14,23 @@ void SetupGDT(){
     gdt->KernelCode.flags.DPL = 0;
     gdt->KernelCode.flags.Present = 1;
     gdt->KernelCode.flags.Read_Write = 1;
-    gdt->KernelCode.flags.DescriptorType = 1;
+    gdt->KernelCode.flags.SegmentType = 1;
+
     gdt->KernelData.flags.DPL = 0;
     gdt->KernelData.flags.Present = 1;
     gdt->KernelData.flags.Read_Write = 1;
-    gdt->KernelData.flags.DescriptorType = 0;
 
     gdt->UserCode.flags.DPL = 3;
     gdt->UserCode.flags.Present = 1;
     gdt->UserCode.flags.Read_Write = 1;
-    gdt->UserCode.flags.DescriptorType = 1;
+    gdt->UserCode.flags.SegmentType = 1;
+
     gdt->UserData.flags.DPL = 3;
     gdt->UserData.flags.Present = 1;
     gdt->UserData.flags.Read_Write = 1;
-    gdt->UserData.flags.DescriptorType = 0;
 
     GDTDescriptor gdtDesc;
     gdtDesc.Offset = reinterpret_cast<uint64_t>(gdt);
-    gdtDesc.Size = sizeof(GDT);
+    gdtDesc.Size = sizeof(GDT) - 1;
     LoadGDT(&gdtDesc);
 }
