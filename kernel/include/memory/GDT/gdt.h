@@ -2,6 +2,15 @@
 
 #include <stdint.h>
 
+namespace Gate_Descriptor_Types{
+    #define TSS_AVAILABLE 9
+    #define TSS_BUSY 11
+    #define CALL_GATE 12
+    #define INTERRUPT_GATE 14
+    #define TRAP_GATE 15
+
+}
+
 struct GDTDescriptor{
     uint16_t Size;
     uint64_t Offset;
