@@ -6,7 +6,7 @@ VirtualMemoryManager KernelVMM;
 VirtualMemoryManager::VirtualMemoryManager(PageTable* PML4Addr) : PML4Address(PML4Addr){}
 VirtualMemoryManager::VirtualMemoryManager() : PML4Address(nullptr){}
 
-void VirtualMemoryManager::MapMemory(const uint64_t virtAddr, const uint64_t physAddr){
+PageDirectoryEntry* VirtualMemoryManager::MapMemory(const uint64_t virtAddr, const uint64_t physAddr){
     VirtualMemoryManager::PageStructureIndizes indizes = getIndizes(virtAddr);
     PageDirectoryEntry PDE;
     PDE = PML4Address->entries[indizes.PDP_i];
@@ -51,6 +51,7 @@ void VirtualMemoryManager::MapMemory(const uint64_t virtAddr, const uint64_t phy
     PDE.SetFlag(PT_Flag::Present,true);
     PDE.SetFlag(PT_Flag::ReadWrite, true);
     PT->entries[indizes.P_i] = PDE;
+    return &PT->entries[indizes.P_i];
 }
 
 void VirtualMemoryManager::UnmapMemory(const uint64_t virtualAddr){
