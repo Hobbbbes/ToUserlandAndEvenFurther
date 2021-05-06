@@ -22,8 +22,7 @@ namespace Interrupt{
         uint64_t address;
     }__attribute__((packed));
 
-    IDT_Descriptor SetupIDT();
-    void InstallInterruptServiceRoutines(const IDT_Descriptor& idt);
+    void SetupIDT();
 
 
 }

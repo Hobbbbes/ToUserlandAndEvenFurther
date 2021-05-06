@@ -15,7 +15,7 @@ namespace Graphics{
                 Hex,Standart
             };
             template<typename T,Print_Specifier S = Print_Specifier::Standart>
-            TextDrawer& print(const T v){
+            TextDrawer& print(const T& v){
                 if constexpr(S == Print_Specifier::Hex){
                         printIntHex<T>(v);
                 }
