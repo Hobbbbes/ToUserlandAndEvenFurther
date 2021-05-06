@@ -93,7 +93,7 @@ void shrinkHeap(){
         tail->size -= HEAP_SHRINK * 0x1000;
         kernelHeap.size -= HEAP_SHRINK*0x1000;
         for(uint64_t p = 1; p <= HEAP_SHRINK; p++){
-            uint64_t pf = KernelVMM.GetMapping(kernelHeap.end - (p*0x1000));
+            uint64_t pf = KernelVMM.GetMapping(kernelHeap.end - (p*0x1000)).GetAddress();
             KernelVMM.UnmapMemory(kernelHeap.end - (p*0x1000));
             KernelPMM.FreePage(pf);
         }

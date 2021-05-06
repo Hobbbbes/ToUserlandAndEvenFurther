@@ -11,7 +11,6 @@ void Interrupt::IDT_Gate_Descriptor::SetISTEntry(uint8_t ist){
 
 Interrupt::IDT_Descriptor Interrupt::SetupIDT(){
     uint64_t pf = KernelPMM.RequestPage();
-    
 }
 void Interrupt::InstallInterruptServiceRoutines(const IDT_Descriptor& idt){
 
