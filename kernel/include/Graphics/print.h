@@ -15,11 +15,11 @@ namespace Graphics{
                 Hex,Standart
             };
             template<typename T,Print_Specifier S = Print_Specifier::Standart>
-            TextDrawer& print(const T& v){
+            TextDrawer& print(const T v){
                 if constexpr(S == Print_Specifier::Hex){
-                        printIntHex<T>(v);
+                    printIntHex<T>(v);
                 }
-                if constexpr((std::is_same<T, const char*>::value || std::is_same<T,char*>::value)){
+                else if constexpr((std::is_same<T, const char*>::value || std::is_same<T,char*>::value)){
                     putString(v);
                 } else if constexpr(std::is_same<T, uint64_t>::value || std::is_same<T, uint32_t>::value || std::is_same<T, uint16_t>::value || std::is_same<T, uint8_t>::value
                 || std::is_same<T, int64_t>::value || std::is_same<T, int32_t>::value || std::is_same<T, int16_t>::value|| std::is_same<T, int8_t>::value){

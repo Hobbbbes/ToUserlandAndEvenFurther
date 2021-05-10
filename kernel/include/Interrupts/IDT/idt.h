@@ -4,7 +4,7 @@ namespace Interrupt{
     struct IDT_Gate_Descriptor{
         uint16_t offset0;
         uint16_t segmentSelector = 0x8; // Kernel Code Selector
-        uint8_t IST :3; //Interrupt Stack Table
+        uint8_t IST :3 = 0; //Interrupt Stack Table
         uint8_t null :5 = 0;
         uint8_t Type :4;
         uint8_t null1 :1 = 0;

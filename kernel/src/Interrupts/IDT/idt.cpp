@@ -1,6 +1,7 @@
 #include "Interrupts/IDT/idt.h"
 #include "memory/memory.h"
 #include "Graphics/print.h"
+#include "Interrupts/InterruptServiceRoutines.h"
 void Interrupt::IDT_Gate_Descriptor::SetOffset(uint64_t offset){
     offset0 = static_cast<uint16_t>(offset & 0x000000000000ffff);
     offset1 = static_cast<uint16_t>((offset & 0x00000000ffff0000) >> 16);
@@ -11,7 +12,20 @@ void Interrupt::IDT_Gate_Descriptor::SetISTEntry(uint8_t ist){
 }
 
 void InstallInterruptServiceRoutines(const Interrupt::IDT_Descriptor& idt){
+    Interrupt::IDT_Gate_Descriptor* pageFault = reinterpret_cast<Interrupt::IDT_Gate_Descriptor*>(idt.address + 0xE * (sizeof(Interrupt::IDT_Gate_Descriptor)));
+    *pageFault = Interrupt::IDT_Gate_Descriptor();
+    pageFault->SetOffset(reinterpret_cast<uint64_t>(Interrupt::Handler::PageFault));
+    pageFault->Type = IDT_GATE_TYPE_INTERRUPT;
 
+    Interrupt::IDT_Gate_Descriptor* doubleFault = reinterpret_cast<Interrupt::IDT_Gate_Descriptor*>(idt.address + 0x8 * (sizeof(Interrupt::IDT_Gate_Descriptor)));
+    *doubleFault = Interrupt::IDT_Gate_Descriptor();
+    doubleFault->SetOffset(reinterpret_cast<uint64_t>(Interrupt::Handler::DoubleFault));
+    doubleFault->Type = IDT_GATE_TYPE_INTERRUPT;
+
+    Interrupt::IDT_Gate_Descriptor* generalProtectionFault = reinterpret_cast<Interrupt::IDT_Gate_Descriptor*>(idt.address + 0xD * (sizeof(Interrupt::IDT_Gate_Descriptor)));
+    *generalProtectionFault = Interrupt::IDT_Gate_Descriptor();
+    generalProtectionFault->SetOffset(reinterpret_cast<uint64_t>(Interrupt::Handler::GeneralProtectionFault));
+    generalProtectionFault->Type = IDT_GATE_TYPE_INTERRUPT;
 }
 
 void Interrupt::SetupIDT(){
@@ -23,8 +37,8 @@ void Interrupt::SetupIDT(){
     InstallInterruptServiceRoutines(desc);
     Graphics::KernelDrawer.print("Setup Interrupt Service Routines\n");
     asm("lidt %0" : : "m" (desc));
-    Graphics::KernelDrawer.print("Loaded idtr Register with Idt Descriptor Address:")
-    .print(desc.address).print(" Size: ").print(desc.size).print("\n");
+    Graphics::KernelDrawer.print("Loaded idtr Register with Idt Descriptor Address: ")
+    .print((void*)desc.address).print(" Size: ").print<uint16_t,Graphics::TextDrawer::Print_Specifier::Hex>(desc.size).print("\n");
     asm("sti"); 
     Graphics::KernelDrawer.print("Enabled Interrupts");
 }

@@ -25,8 +25,9 @@ DIRS = $(wildcard $(SRCDIR)/*)
 
 kernel: link
 
-$(OBJDIR)/interrupts/interrupts.o: $(SRCDIR)/interrupts/interrupts.cpp
-	$(CC) -mno-red-zone -mgeneral-regs-only -ffreestanding -c $^ -o $@
+$(OBJDIR)/Interrupts/InterruptServiceRoutines/%.o: $(SRCDIR)/Interrupts/InterruptServiceRoutines/%.cpp
+	@ mkdir -p $(@D)
+	$(CC) $(CFLAGS) -mgeneral-regs-only -c $^ -o $@
 
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
