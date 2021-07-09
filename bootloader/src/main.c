@@ -116,6 +116,13 @@ typedef struct BootInfo
 	UINTN mMapDescriptorSize;
 } BootInfo;
 
+void print_memorymap(EFI_MEMORY_DESCRIPTOR* map, UINTN DescriptorSize,UINTN MapSize){
+	UINTN map_ptr_value = (UINTN)map;
+	for(UINTN i = 0; i < MapSize; i++, map_ptr_value += DescriptorSize){
+		map = (EFI_MEMORY_DESCRIPTOR*)map_ptr_value;
+		Print(L"Physical Start: %lx  Virtual Start: %lx \n",map->PhysicalStart,map->VirtualStart);
+	}
+}
 
 EFI_STATUS efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 	
@@ -173,6 +180,7 @@ EFI_STATUS efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 				kernel->SetPosition(kernel,phdr->p_offset);
 				UINTN size = phdr->p_filesz;
 				kernel->Read(kernel,&size,(void*)segment);
+				Print(L"Loaded ELF Segment at %lx \n",segment);
 				break;
 			    }
 			}
@@ -212,9 +220,9 @@ EFI_STATUS efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 	bootinfo.mMapSize = MapSize;
 	bootinfo.mMapDescriptorSize = DescriptorSize;
 	
-	
-	SystemTable->BootServices->ExitBootServices(ImageHandle,MapKey);	
-	KernelStart(&bootinfo);
+	//print_memorymap(Map,DescriptorSize,MapSize);
+	//SystemTable->BootServices->ExitBootServices(ImageHandle,MapKey);
+	//KernelStart(&bootinfo);
 
 	return EFI_SUCCESS; // Exit the UEFI application
 }

@@ -8,7 +8,7 @@ ASMC = nasm
 LD = ld
 CFLAGS = -ffreestanding -fshort-wchar -mno-red-zone -std=c++20 -Iinclude -fno-stack-protector -MMD -MP -fno-exceptions -g 
 ASMFLAGS = 
-LDFLAGS = -T $(LDS) -static -Bsymbolic -nostdlib
+LDFLAGS = -T $(LDS) -static -Bsymbolic -nostdlib -no-relax
 
 SRCDIR := src
 OBJDIR := lib
