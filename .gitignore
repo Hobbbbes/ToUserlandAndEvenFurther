@@ -3,4 +3,4 @@
 *.efi
 *.elf
 *.img
-
+*.d

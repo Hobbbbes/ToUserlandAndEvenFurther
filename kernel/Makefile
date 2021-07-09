@@ -6,7 +6,7 @@ LDS = kernel.ld
 CC = gcc
 ASMC = nasm
 LD = ld
-CFLAGS = -ffreestanding -fshort-wchar -mno-red-zone -std=c++20 -Iinclude -fno-exceptions -g 
+CFLAGS = -ffreestanding -fshort-wchar -mno-red-zone -std=c++20 -Iinclude -fno-stack-protector -MMD -MP -fno-exceptions -g 
 ASMFLAGS = 
 LDFLAGS = -T $(LDS) -static -Bsymbolic -nostdlib
 
@@ -23,31 +23,33 @@ OBJS = $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(SRC))
 OBJS += $(patsubst $(SRCDIR)/%.asm, $(OBJDIR)/%_asm.o, $(ASMSRC))
 DIRS = $(wildcard $(SRCDIR)/*)
 
-kernel: link
+kernel: bootimg
 
 $(OBJDIR)/Interrupts/InterruptServiceRoutines/%.o: $(SRCDIR)/Interrupts/InterruptServiceRoutines/%.cpp
 	@ mkdir -p $(@D)
-	$(CC) $(CFLAGS) -mgeneral-regs-only -c $^ -o $@
+	$(CC) $(CFLAGS) -mgeneral-regs-only -c $< -o $@
 
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	@ mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c $^ -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/%_asm.o: $(SRCDIR)/%.asm
 	@ mkdir -p $(@D)
-	$(ASMC) $(ASMFLAGS) $^ -f elf64 -o $@
+	$(ASMC) $(ASMFLAGS) $< -f elf64 -o $@
 
 link: $(OBJS)
 	$(LD) $(LDFLAGS) -o $(BUILDDIR)/kernel.elf $(OBJS)
 
+DEPS := $(OBJS:.o=.d)
+-include $(DEPS)
 
 setup:
 	@mkdir $(BUILDDIR)
 	@mkdir $(SRCDIR)
 	@mkdir $(OBJDIR)
 
-bootimg:
+bootimg: link
 	dd if=/dev/zero of=$(BUILDDIR)/$(OSNAME).img bs=512 count=93750
 	mformat -i $(BUILDDIR)/$(OSNAME).img -f 1440 ::
 	mmd -i $(BUILDDIR)/$(OSNAME).img ::/EFI
@@ -58,7 +60,7 @@ bootimg:
 	mcopy -i $(BUILDDIR)/$(OSNAME).img $(BUILDDIR)/zap-light16.psf ::
 
 clean:
-	rm -f $(OBJS) 
+	rm -rf lib/*
 	rm -f $(BUILDDIR)/CustomOS.img $(BUILDDIR)/kernel.elf
 
 run_cpu_reset:

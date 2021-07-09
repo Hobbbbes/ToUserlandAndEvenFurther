@@ -3,7 +3,7 @@
 #include "Graphics/print.h"
 #include "memory/memory_defines.h"
 
-extern "C" void init_stack(BootInfo* BootInfo, uint64_t stackBase);
+extern "C" [[noreturn]] void init_stack(BootInfo* BootInfo, uint64_t stackBase);
 
 void IdentityMapPhysicalMemory(BootInfo* bi){
     //Identity Map Physical RAM
@@ -33,7 +33,7 @@ void MapStack(){
     }
 }
 
-extern "C" void _start(BootInfo* bootinfo) {
+extern "C" [[noreturn]] void _start(BootInfo* bootinfo) {
     Graphics::KernelDrawer = Graphics::TextDrawer(*bootinfo->framebuffer,*bootinfo->psf1_font);
     
     KernelPMM = PageFrameAllocator(bootinfo->mMap,bootinfo->mMapSize,bootinfo->mMapDescriptorSize);
