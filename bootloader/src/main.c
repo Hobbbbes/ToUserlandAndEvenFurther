@@ -118,9 +118,10 @@ typedef struct BootInfo
 
 void print_memorymap(EFI_MEMORY_DESCRIPTOR* map, UINTN DescriptorSize,UINTN MapSize){
 	UINTN map_ptr_value = (UINTN)map;
-	for(UINTN i = 0; i < MapSize; i++, map_ptr_value += DescriptorSize){
+	for(UINTN i = 0; i < MapSize / DescriptorSize; i++, map_ptr_value += DescriptorSize){
 		map = (EFI_MEMORY_DESCRIPTOR*)map_ptr_value;
-		Print(L"Physical Start: %lx  Virtual Start: %lx \n",map->PhysicalStart,map->VirtualStart);
+		Print(L"Physical Start: %lx  Virtual Start: %lx Size: %ld\n",
+		map->PhysicalStart,map->VirtualStart,map->NumberOfPages);
 	}
 }
 
@@ -165,7 +166,7 @@ EFI_STATUS efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 		kernel->Read(kernel,&size,phdrs);
 
 	}
-
+	UINTN number_loadable_segments = 1;
 	for(
 		Elf64_Phdr * phdr = phdrs;
 		(char*) phdr < (char*) phdrs + header.e_phnum * header.e_phentsize;
@@ -181,6 +182,7 @@ EFI_STATUS efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 				UINTN size = phdr->p_filesz;
 				kernel->Read(kernel,&size,(void*)segment);
 				Print(L"Loaded ELF Segment at %lx \n",segment);
+				number_loadable_segments++;
 				break;
 			    }
 			}
@@ -209,7 +211,7 @@ EFI_STATUS efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 	UINT32 DescriptorVersion;
 	{
 		SystemTable->BootServices->GetMemoryMap(&MapSize, Map, &MapKey, &DescriptorSize, &DescriptorVersion);
-		SystemTable->BootServices->AllocatePool(EfiLoaderData, MapSize, (void**)&Map);
+		SystemTable->BootServices->AllocatePool(EfiLoaderData, MapSize + number_loadable_segments * DescriptorSize, (void**)&Map);
 		SystemTable->BootServices->GetMemoryMap(&MapSize,Map, &MapKey, &DescriptorSize, &DescriptorVersion);
 	}
 	void (*KernelStart)(BootInfo*) = ((__attribute__((sysv_abi)) void (*)(BootInfo*)) header.e_entry);
@@ -221,9 +223,91 @@ EFI_STATUS efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 	bootinfo.mMapDescriptorSize = DescriptorSize;
 	
 	//print_memorymap(Map,DescriptorSize,MapSize);
-	//SystemTable->BootServices->ExitBootServices(ImageHandle,MapKey);
-	//KernelStart(&bootinfo);
+	EFI_STATUS exit_stat = SystemTable->BootServices->ExitBootServices(ImageHandle,MapKey);
+	if(exit_stat != EFI_SUCCESS){
+		asm("mov %0,%%rax \n"
+		"hlt"
+		: : "r" ((uint64_t)exit_stat << 8) : "rax");
+	}
+	
+	//Print(L"Before altering Memory Map \n");
+	UINTN map_ptr_value = (UINTN)Map;
+	for(UINTN i = 0; i < MapSize / DescriptorSize; i++, map_ptr_value += DescriptorSize){
+		EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)map_ptr_value;
+		desc->VirtualStart = (desc->PhysicalStart * 0x1000) / 0x1000;
+		if(i < 3){
+			desc->VirtualStart += 0x800000000000;
+			desc->Type = EfiRuntimeServicesCode;
+		}
+	}
 
+	UINTN i = ((UINTN)Map) +  MapSize;
+	for(
+		Elf64_Phdr * phdr = phdrs;
+		(char*) phdr < (char*) phdrs + header.e_phnum * header.e_phentsize;
+		phdr = (Elf64_Phdr*)((char*)phdr + header.e_phentsize)
+		){
+			switch (phdr->p_type)
+			{
+			case PT_LOAD:{
+				EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)i;
+				desc->NumberOfPages = (phdr->p_memsz + 0x1000-1) /0x1000;
+				desc->Type = EfiConventionalMemory;
+				//desc->Attribute = EFI_MEMORY_WP;
+				desc->PhysicalStart = phdr->p_paddr;
+				desc->VirtualStart = phdr->p_vaddr;
+				//Print(L"Mapped %lx to %lx\n", desc->PhysicalStart,desc->VirtualStart);
+				i += DescriptorSize;
+				break;
+			    }
+			}
+		}
+	EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)(((UINTN)Map) +  MapSize + ((number_loadable_segments-1) * DescriptorSize));
+	//desc->Attribute = EFI_MEMORY_UC;
+	desc->NumberOfPages = (UINTN)initializedBuffer->BufferSize / 0x1000;
+	desc->PhysicalStart = (UINTN)initializedBuffer->BaseAddress;
+	desc->VirtualStart = (UINTN)initializedBuffer->BaseAddress;
+	desc->Type = EfiBltBufferToVideo;
+	print_memorymap(Map,DescriptorSize,MapSize + number_loadable_segments * DescriptorSize);
+	//Print(L"Entry Function: %lx \n", KernelStart);
+	EFI_STATUS virt_res = SystemTable->RuntimeServices->SetVirtualAddressMap(MapSize,DescriptorSize,DescriptorVersion,Map);
+	//Print(L"After set_virtual address map\n");
+	if(virt_res != EFI_SUCCESS){
+		asm("mov %0,%%rax \n"
+			"hlt"
+			: : "r" ((uint64_t)virt_res) : "rax");
+	} else if (virt_res == EFI_SUCCESS) {
+		for(UINTN i = 0; i<initializedBuffer->BufferSize;i++){
+			((char*)initializedBuffer->BaseAddress)[i] = 0xff;
+		}
+		asm("mov $4242424242,%%rax \n"
+			"hlt"
+			: : : "rax");
+	}
+	/*
+
+	switch (virt_res)
+	{
+	case EFI_SUCCESS:
+		Print(L"Returned EFI_SUCCESS\n");
+		asm("mov $0, %%rax \n"
+			"hlt" : : : "rax");
+		break;
+	case EFI_UNSUPPORTED:
+		Print(L"Returned EFI_UNSUPPORTED\n");
+		asm("mov $3, %%rax \n"
+			"hlt" : : : "rax");
+		break;
+	default:
+		Print(L"Returned Something\n");
+		asm("mov $1000, %%rax \n"
+			"hlt" : : : "rax");
+		break;
+	}
+	*/
+	//while(1){}
+	//KernelStart(&bootinfo);
+	for(;;) __asm__("hlt");
 	return EFI_SUCCESS; // Exit the UEFI application
 }
 
