@@ -22,7 +22,7 @@ PageStructureIndizes getIndizes(uint64_t virtualAddr){
 }
 
 uint64_t setaddr(uint64_t paddr){
-    uint64_t value;
+    uint64_t value = 0;
     paddr &= 0x000000ffffffffff;
     value &= 0xfff0000000000fff;
     value |= (paddr << 12);
@@ -37,39 +37,34 @@ void MapMemory(void* PLM4, uint64_t paddr, uint64_t vaddr){
     PageDirEntry pde = ((PageDirEntry*)PLM4)[indizes.PDP_i];
     PageDirEntry* pagetable = NULL;
     if(pde == 0){
-        ST->BootServices->AllocatePages(AllocateAnyPages,EfiConventionalMemory,1,&pde);
-        ST->BootServices->SetMem(pde,0x1000,0x00);
-        ((PageDirEntry*)PLM4)[indizes.PDP_i] = setaddr(pde >> 12);
-        pagetable = pde;
+        ST->BootServices->AllocatePages(AllocateAnyPages,EfiLoaderData,1,(uint64_t*)&pagetable);
+        ST->BootServices->SetMem((void*)pagetable,0x1000,0x00);
+        ((PageDirEntry*)PLM4)[indizes.PDP_i] = setaddr(((uint64_t)pagetable) >> 12);
     } else {
-        pagetable = getaddr(pde) << 12;
+        pagetable = (PageDirEntry*)(getaddr(pde) << 12);
     }
     pde = pagetable[indizes.PD_i];
     pagetable = NULL;
     if(pde == 0){
-        ST->BootServices->AllocatePages(AllocateAnyPages,EfiConventionalMemory,1,&pde);
-        ST->BootServices->SetMem(pde,0x1000,0x00);
-        ((PageDirEntry*)PLM4)[indizes.PDP_i] = setaddr(pde >> 12);
-        pagetable = pde;
+        ST->BootServices->AllocatePages(AllocateAnyPages,EfiLoaderData,1,(uint64_t*)&pagetable);
+        ST->BootServices->SetMem((void*)pagetable,0x1000,0x00);
+        ((PageDirEntry*)pagetable)[indizes.PD_i] = setaddr(((uint64_t)pagetable) >> 12);
     } else {
-        pagetable = getaddr(pde) << 12;
+        pagetable = (PageDirEntry*)(getaddr(pde) << 12);
     }
     pde = pagetable[indizes.PT_i];
     pagetable = NULL;
     if(pde == 0){
-        ST->BootServices->AllocatePages(AllocateAnyPages,EfiConventionalMemory,1,&pde);
-        ST->BootServices->SetMem(pde,0x1000,0x00);
-        ((PageDirEntry*)PLM4)[indizes.PDP_i] = setaddr(pde >> 12);
-        pagetable = pde;
+        ST->BootServices->AllocatePages(AllocateAnyPages,EfiLoaderData,1,(uint64_t*)&pagetable);
+        ST->BootServices->SetMem((void*)pagetable,0x1000,0x00);
+        ((PageDirEntry*)pagetable)[indizes.PT_i] = setaddr(((uint64_t)pagetable) >> 12);
     } else {
-        pagetable = getaddr(pde) << 12;
+        pagetable = (PageDirEntry*)(getaddr(pde) << 12);
     }
-    pde = pagetable[indizes.P_i];
-    pagetable = NULL;
     pagetable[indizes.P_i] = setaddr(paddr);
 }
 
-int MapEfiMemoryMap(UINTN MapSize, UINTN DescriptorSize, EFI_MEMORY_DESCRIPTOR* Map, void* PLM4){
+void MapEfiMemoryMap(UINTN MapSize, UINTN DescriptorSize, EFI_MEMORY_DESCRIPTOR* Map, void* PLM4){
     UINTN map_ptr_value = (UINTN)Map;
 	for(UINTN i = 0; i < MapSize / DescriptorSize; i++, map_ptr_value += DescriptorSize){
 		Map = (EFI_MEMORY_DESCRIPTOR*)map_ptr_value;

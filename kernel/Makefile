@@ -1,6 +1,5 @@
 
 OSNAME = ToUserlandAndEvenFurther
-
 GNUEFI = ../bootloader
 LDS = kernel.ld
 CC = gcc
@@ -44,14 +43,21 @@ link: $(OBJS)
 DEPS := $(OBJS:.o=.d)
 -include $(DEPS)
 
-setup:
-	@mkdir $(BUILDDIR)
-	@mkdir $(SRCDIR)
-	@mkdir $(OBJDIR)
+img:
+	./setup_os_image.sh $(BUILDDIR) $(OSNAME) $(LOOP)
+
+setup: img
+	@mkdir -p $(BUILDDIR)
+	@mkdir -p $(SRCDIR)
+	@mkdir -p $(OBJDIR)
+	mkfs -t ext2 $(LOOP)p2
+	mkfs -t fat32 $(LOOP)p1
+
+	
 
 bootimg: link
-	dd if=/dev/zero of=$(BUILDDIR)/$(OSNAME).img bs=512 count=93750
-	mformat -i $(BUILDDIR)/$(OSNAME).img -f 1440 ::
+	dd if=/dev/zero of=$(BUILDDIR)/$(OSNAME).img bs=1024 count=100000
+	/home/calvin/Build_from_source/mtools-4.0.32/mformat -i $(BUILDDIR)/$(OSNAME).img -f 1440 ::
 	mmd -i $(BUILDDIR)/$(OSNAME).img ::/EFI
 	mmd -i $(BUILDDIR)/$(OSNAME).img ::/EFI/BOOT
 	mcopy -i $(BUILDDIR)/$(OSNAME).img $(BOOTEFI) ::/EFI/BOOT/main.efi
@@ -61,7 +67,7 @@ bootimg: link
 
 clean:
 	rm -rf lib/*
-	rm -f $(BUILDDIR)/CustomOS.img $(BUILDDIR)/kernel.elf
+	rm -f $(BUILDDIR)/$(OSNAME).img $(BUILDDIR)/kernel.elf
 
 run_cpu_reset:
 	qemu-system-x86_64 -drive file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -bios /usr/share/ovmf/x64/OVMF.fd -d cpu_reset -net none
@@ -71,3 +77,6 @@ run:
 debug:
 	qemu-system-x86_64 -drive file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -bios /usr/share/ovmf/x64/OVMF.fd -net none -s&
 	gdb -tui -ex "target remote localhost:1234" -ex "symbol-file bin/kernel.elf" -ex "set disassembly-flavor intel" -ex "focus cmd" -ex "set print asm-demangle on" -ex "set print demangle on"
+debug-efi:
+	qemu-system-x86_64 -drive file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -bios /usr/share/ovmf/x64/OVMF.fd -net none -s&
+	gdb -tui -ex "target remote localhost:1234" -ex "add-symbol-file ../bootloader/bin/main.so 0xE7AC000 -s .data 0xe7b4000" -ex "set disassembly-flavor intel" -ex "focus cmd" -ex "set print asm-demangle on" -ex "set print demangle on" ../bootloader/bin/main.efi
