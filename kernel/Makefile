@@ -70,13 +70,13 @@ setup: img
 add_loop: img
 	@echo $(LOOP)
 remove_loop: umount
-	losetup -d $(LOOP)
+	-losetup -d $(LOOP)
 umount:
 	-sudo umount $(LOOP)p1 
 	-sudo umount $(LOOP)p2
 mount: add_loop
-	sudo mount -t vfat $(LOOP)p1 $(EFI_PART_MOUNT_PATH) -o rw,uid=$(CURRENT_UID),gid=$(CURRENT_GID)
-	sudo mount $(LOOP)p2 $(DATA_PART_MOUNT_PATH) -o rw
+	-sudo mount -t vfat $(LOOP)p1 $(EFI_PART_MOUNT_PATH) -o rw,uid=$(CURRENT_UID),gid=$(CURRENT_GID)
+	-sudo mount $(LOOP)p2 $(DATA_PART_MOUNT_PATH) -o rw
 
 bootimg: link mount
 	-rm $(EFI_PART_MOUNT_PATH)/EFI/BOOT/main.efi
@@ -86,16 +86,16 @@ bootimg: link mount
 
 clean:
 	rm -rf lib/*
-	rm -f $(BUILDDIR)/$(OSNAME).img $(BUILDDIR)/kernel.elf
+	rm -f $(BUILDDIR)/kernel.elf
 
-run_cpu_reset:
+run_cpu_reset: remove_loop
 	qemu-system-x86_64 -drive format=raw,file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -bios /usr/share/ovmf/x64/OVMF.fd -d cpu_reset -net none
 
-run:
-	qemu-system-x86_64 -drive format=raw,file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -bios /usr/share/ovmf/x64/OVMF.fd -net none
-debug:
+run: remove_loop
+	qemu-system-x86_64 -d mmu,guest_errors,page -drive format=raw,file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -bios /usr/share/ovmf/x64/OVMF.fd -net none
+debug: remove_loop
 	qemu-system-x86_64 -drive format=raw,file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -bios /usr/share/ovmf/x64/OVMF.fd -net none -s&
 	gdb -tui -ex "target remote localhost:1234" -ex "symbol-file bin/kernel.elf" -ex "set disassembly-flavor intel" -ex "focus cmd" -ex "set print asm-demangle on" -ex "set print demangle on"
-debug-efi: bootimg
+debug-efi: remove_loop
 	qemu-system-x86_64 -drive format=raw,file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -bios /usr/share/ovmf/x64/OVMF.fd -net none -s&
-	gdb -tui -ex "target remote localhost:1234" -ex "add-symbol-file ../bootloader/bin/main.so 0xE7AC000 -s .data 0xe7b4000" -ex "set disassembly-flavor intel" -ex "focus cmd" -ex "set print asm-demangle on" -ex "set print demangle on" ../bootloader/bin/main.efi
+	gdb -tui -ex "target remote localhost:1234" -ex "add-symbol-file ../bootloader/bin/main.so 0xE7B3000 -s .data 0xe7bb000" -ex "set disassembly-flavor intel" -ex "focus cmd" -ex "set print asm-demangle on" -ex "set print demangle on" ../bootloader/bin/main.efi

@@ -26,7 +26,7 @@ uint64_t setaddr(uint64_t paddr){
     paddr &= 0x000000ffffffffff;
     value &= 0xfff0000000000fff;
     value |= (paddr << 12);
-    return value + 1; //Set first bit, Present Flag
+    return value + 0x3; //Set first and second bit, Present Flag
 }
 uint64_t getaddr(uint64_t entry){
     return (entry & 0x000ffffffffff000) >> 12;
@@ -44,24 +44,26 @@ void MapMemory(void* PLM4, uint64_t paddr, uint64_t vaddr){
         pagetable = (PageDirEntry*)(getaddr(pde) << 12);
     }
     pde = pagetable[indizes.PD_i];
-    pagetable = NULL;
     if(pde == 0){
-        ST->BootServices->AllocatePages(AllocateAnyPages,EfiLoaderData,1,(uint64_t*)&pagetable);
-        ST->BootServices->SetMem((void*)pagetable,0x1000,0x00);
-        ((PageDirEntry*)pagetable)[indizes.PD_i] = setaddr(((uint64_t)pagetable) >> 12);
+        uint64_t newPage;
+        ST->BootServices->AllocatePages(AllocateAnyPages,EfiLoaderData,1,&newPage);
+        ST->BootServices->SetMem((void*)newPage,0x1000,0x00);
+        ((PageDirEntry*)pagetable)[indizes.PD_i] = setaddr(newPage >> 12);
+        pagetable = (PageDirEntry*)newPage;
     } else {
         pagetable = (PageDirEntry*)(getaddr(pde) << 12);
     }
     pde = pagetable[indizes.PT_i];
-    pagetable = NULL;
     if(pde == 0){
-        ST->BootServices->AllocatePages(AllocateAnyPages,EfiLoaderData,1,(uint64_t*)&pagetable);
-        ST->BootServices->SetMem((void*)pagetable,0x1000,0x00);
-        ((PageDirEntry*)pagetable)[indizes.PT_i] = setaddr(((uint64_t)pagetable) >> 12);
+        uint64_t newPage;
+        ST->BootServices->AllocatePages(AllocateAnyPages,EfiLoaderData,1,&newPage);
+        ST->BootServices->SetMem((void*)newPage,0x1000,0x00);
+        ((PageDirEntry*)pagetable)[indizes.PT_i] = setaddr(newPage >> 12);
+        pagetable = (PageDirEntry*)newPage;
     } else {
         pagetable = (PageDirEntry*)(getaddr(pde) << 12);
     }
-    pagetable[indizes.P_i] = setaddr(paddr);
+    pagetable[indizes.P_i] = setaddr(paddr >> 12);
 }
 
 void MapEfiMemoryMap(UINTN MapSize, UINTN DescriptorSize, EFI_MEMORY_DESCRIPTOR* Map, void* PLM4){

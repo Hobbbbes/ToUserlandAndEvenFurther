@@ -220,22 +220,9 @@ EFI_STATUS efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 	L"\n", initializedBuffer->BaseAddress,initializedBuffer->BufferSize,
 	initializedBuffer->Width,initializedBuffer->Height,initializedBuffer->PixelsPerScanLine);
 
-	EFI_MEMORY_DESCRIPTOR* Map = NULL;
-	UINTN MapSize, MapKey;
-	UINTN DescriptorSize;
-	UINT32 DescriptorVersion;
-	{
-		SystemTable->BootServices->GetMemoryMap(&MapSize, Map, &MapKey, &DescriptorSize, &DescriptorVersion);
-		SystemTable->BootServices->AllocatePool(EfiLoaderData, MapSize, (void**)&Map);
-		SystemTable->BootServices->GetMemoryMap(&MapSize,Map, &MapKey, &DescriptorSize, &DescriptorVersion);
-	}
+
 	void (*KernelStart)(BootInfo*) = ((__attribute__((sysv_abi)) void (*)(BootInfo*)) header.e_entry);
-	BootInfo bootinfo;
-	bootinfo.framebuffer = initializedBuffer;
-	bootinfo.psf1Font = newFont;
-	bootinfo.mMap = Map;
-	bootinfo.mMapSize = MapSize;
-	bootinfo.mMapDescriptorSize = DescriptorSize;
+
 	EFI_PHYSICAL_ADDRESS PLM4;
 	//ST->BootServices->AllocatePages(AllocateAnyPages,EfiLoaderData,1,&PLM4);
 	//ST->BootServices->SetMem((void*)PLM4,0x1000,0x00);
@@ -243,6 +230,12 @@ EFI_STATUS efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 	PLM4 = (PLM4 >> 12) << 12;
 	//Identity map physical Memory and EFI Used Memory
 	//MapEfiMemoryMap(MapSize,DescriptorSize,Map,(void*)PLM4);
+
+	//Copy Original PLM4 to Writable Location
+	EFI_PHYSICAL_ADDRESS new_PLM4;
+	ST->BootServices->AllocatePages(AllocateAnyPages,EfiLoaderData,1,&new_PLM4);
+	ST->BootServices->CopyMem((void*)new_PLM4,(void*)PLM4,0x1000);
+	PLM4 = new_PLM4;
 
 	//Map all Kernel Segments to respective virtual addrs
 	for(
@@ -264,13 +257,16 @@ EFI_STATUS efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 	/*for(uint64_t addr = (uint64_t)framebuffer.BaseAddress; addr < (uint64_t)framebuffer.BaseAddress + (uint64_t)framebuffer.BufferSize; addr += 0x1000){
 		MapMemory((void*)PLM4,addr,addr);
 	}*/
-//get new Memory Map
+	Print(L"New Pagetable at %lx \n", PLM4);
+	EFI_MEMORY_DESCRIPTOR* Map = NULL;
+	UINTN MapSize, MapKey;
+	UINTN DescriptorSize;
+	UINT32 DescriptorVersion;
 	{
 		SystemTable->BootServices->GetMemoryMap(&MapSize, Map, &MapKey, &DescriptorSize, &DescriptorVersion);
 		SystemTable->BootServices->AllocatePool(EfiLoaderData, MapSize, (void**)&Map);
 		SystemTable->BootServices->GetMemoryMap(&MapSize,Map, &MapKey, &DescriptorSize, &DescriptorVersion);
 	}
-
 	//print_memorymap(Map,DescriptorSize,MapSize);
 	EFI_STATUS exit_stat = SystemTable->BootServices->ExitBootServices(ImageHandle,MapKey);
 	if(exit_stat != EFI_SUCCESS){
@@ -279,6 +275,13 @@ EFI_STATUS efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 		: : "r" ((uint64_t)exit_stat << 8) : "rax");
 	}
 	asm("mov %0,%%cr3" : : "r"(PLM4));
+	BootInfo bootinfo;
+	bootinfo.framebuffer = initializedBuffer;
+	bootinfo.psf1Font = newFont;
+	bootinfo.mMap = Map;
+	bootinfo.mMapSize = MapSize;
+	bootinfo.mMapDescriptorSize = DescriptorSize;
+	//int test = *((int*)0x800000000000);
 	KernelStart(&bootinfo);
 	for(;;) __asm__("hlt");
 	return EFI_SUCCESS; // Exit the UEFI application

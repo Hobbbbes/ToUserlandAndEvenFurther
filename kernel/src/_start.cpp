@@ -36,6 +36,7 @@ void MapStack(){
 extern "C" [[noreturn]] void _start(BootInfo* bootinfo) {
     Graphics::KernelDrawer = Graphics::TextDrawer(*bootinfo->framebuffer,*bootinfo->psf1_font);
     Graphics::KernelDrawer.print("In Kernel\n");
+    asm("hlt");
     KernelPMM = PageFrameAllocator(bootinfo->mMap,bootinfo->mMapSize,bootinfo->mMapDescriptorSize);
     
     uint64_t kernelSizePages = (reinterpret_cast<uint64_t>(&_KernelEnd) - reinterpret_cast<uint64_t>(&_KernelStart)) / 0x1000 + 1;
