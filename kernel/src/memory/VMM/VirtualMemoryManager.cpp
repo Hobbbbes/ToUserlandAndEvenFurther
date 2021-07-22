@@ -50,7 +50,6 @@ PageDirectoryEntry* VirtualMemoryManager::MapMemory(const uint64_t virtAddr, con
     PDE = PT->entries[indizes.P_i];
     PDE.SetAddress(reinterpret_cast<uint64_t>(physAddr) >> 12);
     PDE.SetFlag(PT_Flag::Present,true);
-    PDE.SetFlag(PT_Flag::ReadWrite, true);
     PDE.SetFlag(flags,true);
     PT->entries[indizes.P_i] = PDE;
     return &PT->entries[indizes.P_i];

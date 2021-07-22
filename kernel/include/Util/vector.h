@@ -2,15 +2,18 @@
 #include <stdint.h>
 #include "memory/memory.h"
 #include "Util/panic.h"
+#include <type_traits>
 namespace Util{
 template<typename T> 
 class vector{
     private:
         T* buff = nullptr;
         uint64_t size = 0;
-        uint64_t capacity = 5;
+        uint64_t capacity = 0;
     public:
-        inline vector(){buff = new[capacity];}
+    
+        inline vector(){}
+        inline vector(const T& init){buff = new T[capacity](init);}
         inline vector(uint64_t size) : size(size), capacity(size){
             buff = new T[size];
         }
@@ -21,8 +24,8 @@ class vector{
         }
         void push_back(T value){
             if(size + 1 > capacity){
-                capacity *= 2;
-                T* newBuff = new T[capacity];
+                ++capacity *= 2;
+                T* newBuff = reinterpret_cast<T*>(new uint8_t[capacity * sizeof(T)]);
                 memcpy(buff,newBuff,size);
                 delete[] buff;
                 buff = newBuff;

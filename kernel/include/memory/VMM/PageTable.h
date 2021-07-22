@@ -10,6 +10,7 @@ enum PT_Flag{
     Accessed = 1<<5,
 //Bit to Ignore
     LargePages = 1<<7,
+    Global = 1<<8,
 //Bit to Ignore
     Custom0 = 1<<9,
     Custom1 = 1<<10,

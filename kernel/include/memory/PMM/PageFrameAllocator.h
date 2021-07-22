@@ -31,6 +31,7 @@ class PageFrameAllocator{
         PageStack pageStack;
         Util::Bitmap pageBitmap;
         bool InitializedSuccessfully = false;
+        static PageFrameAllocator KernelPMM;
 };
 extern PageFrameAllocator KernelPMM;
 }

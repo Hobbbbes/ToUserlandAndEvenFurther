@@ -25,6 +25,7 @@ namespace Memory{
             inline uint64_t getEnd() const {return start + (size*0x1000) - 1;}
             inline Type getType() const {return type;}
             inline uint64_t getSize() const {return size;}
+            inline bool kernelMapping() const {return kernel;}
             inline bool containsAddress(uint64_t addr) const {return addr >= getStart() && addr <= getEnd();}
         private:
             uint64_t start;

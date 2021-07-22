@@ -26,7 +26,7 @@ DIRS = $(wildcard $(SRCDIR)/*)
 CURRENT_UID := $(shell id -u)
 CURRENT_GID := $(shell id -g)
 
-kernel: bootimg
+kernel: link
 
 $(OBJDIR)/Interrupts/InterruptServiceRoutines/%.o: $(SRCDIR)/Interrupts/InterruptServiceRoutines/%.cpp
 	@ mkdir -p $(@D)
