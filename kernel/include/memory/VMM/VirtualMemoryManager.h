@@ -1,5 +1,6 @@
 #pragma once
 #include "memory/VMM/PageTable.h"
+namespace Memory{
 class VirtualMemoryManager{
     public:
         VirtualMemoryManager(PageTable* PML4Addr);
@@ -20,3 +21,4 @@ class VirtualMemoryManager{
 };
 
 extern VirtualMemoryManager KernelVMM;
+}

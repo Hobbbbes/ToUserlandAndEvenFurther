@@ -1,6 +1,7 @@
 #include "memory/VMM/VirtualMemoryManager.h"
 #include "memory/PMM/PageFrameAllocator.h"
 #include "memory/memory.h"
+namespace Memory{
 VirtualMemoryManager KernelVMM;
 
 VirtualMemoryManager::VirtualMemoryManager(PageTable* PML4Addr) : PML4Address(PML4Addr){}
@@ -139,4 +140,5 @@ VirtualMemoryManager::PageStructureIndizes VirtualMemoryManager::getIndizes(uint
     virtualAddr >>=9;
     res.PDP_i = virtualAddr & 0x1ff;
     return res;
+}
 }

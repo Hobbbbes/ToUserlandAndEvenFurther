@@ -1,5 +1,6 @@
 #include "memory/PMM/PageFrameAllocator.h"
 #include "Util/panic.h"
+namespace Memory{
 PageFrameAllocator KernelPMM;
 
 PageFrameAllocator::PageFrameAllocator(EFI_MEMORY_DESCRIPTOR* mMap, uint64_t mMapSize, uint64_t mMapDescSize){
@@ -123,4 +124,5 @@ uint64_t PageFrameAllocator::RequestPage(){
     usedMemory += 0x1000;
     freeMemory -= 0x1000;
     return addr;
+}
 }

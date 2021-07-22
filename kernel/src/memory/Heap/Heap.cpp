@@ -23,8 +23,7 @@ constexpr uint64_t HeapEntryHeaderMagicValue = 0xe1efa87e1efa87ff;
 Heap kernelHeap;
 HeapEntryHeader* startSec;
 HeapEntryHeader* head;
-
-
+namespace Memory{
 void initHeap(uint64_t begin, uint64_t end){
     kernelHeap = Heap(begin,end,end - begin);
     *reinterpret_cast<HeapEntryHeader*>(begin) = HeapEntryHeader(reinterpret_cast<HeapEntryHeader*>(begin)
@@ -32,7 +31,7 @@ void initHeap(uint64_t begin, uint64_t end){
     startSec = reinterpret_cast<HeapEntryHeader*>(begin);
     head = startSec;
 }
-
+}
 Heap::Heap(uint64_t b, uint64_t e, uint64_t sz)
 : begin(b), end(e), size(sz){}
 Heap::Heap()
@@ -63,11 +62,11 @@ bool growHeap(uint64_t to_grow){
         pages = MIN_HEAP_GROWTH_PAGES;
     }
     for(uint64_t p = 0; p<pages; p++){
-        if(KernelPMM.GetFreeRam() == 0){
+        if(Memory::KernelPMM.GetFreeRam() == 0){
             return false;
         }
-        uint64_t pf = KernelPMM.RequestPage();
-        KernelVMM.MapMemory(kernelHeap.end + (p * 0x1000), pf);
+        uint64_t pf = Memory::KernelPMM.RequestPage();
+        Memory::KernelVMM.MapMemory(kernelHeap.end + (p * 0x1000), pf);
     }
     HeapEntryHeader* tail = head->previousHeader;
     if (reinterpret_cast<uint64_t>(tail) + tail->size + sizeof(HeapEntryHeader) == kernelHeap.end){
@@ -93,9 +92,9 @@ void shrinkHeap(){
         tail->size -= HEAP_SHRINK * 0x1000;
         kernelHeap.size -= HEAP_SHRINK*0x1000;
         for(uint64_t p = 1; p <= HEAP_SHRINK; p++){
-            uint64_t pf = KernelVMM.GetMapping(kernelHeap.end - (p*0x1000)).GetAddress();
-            KernelVMM.UnmapMemory(kernelHeap.end - (p*0x1000));
-            KernelPMM.FreePage(pf);
+            uint64_t pf = Memory::KernelVMM.GetMapping(kernelHeap.end - (p*0x1000)).GetAddress();
+            Memory::KernelVMM.UnmapMemory(kernelHeap.end - (p*0x1000));
+            Memory::KernelPMM.FreePage(pf);
         }
         kernelHeap.end -= HEAP_SHRINK*0x1000;
     }

@@ -3,7 +3,7 @@
 #include "memory/GDT/gdt.h"
 #include "Interrupts/IDT/idt.h"
 void main(BootInfo* bootinfo){
-    SetupGDT();
+    Memory::SetupGDT();
     Graphics::KernelDrawer.print("Setup GDT at ").print((void*)GDT_VIRTUAL_MEMORY_POS).print("\n");
     
     Interrupt::SetupIDT();

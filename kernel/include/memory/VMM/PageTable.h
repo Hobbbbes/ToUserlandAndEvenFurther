@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
-
+namespace Memory{
 enum PT_Flag{
     Present = 1<<0,
     ReadWrite = 1<<1,
@@ -47,3 +47,4 @@ class PageDirectoryEntry{
 struct PageTable{
     PageDirectoryEntry entries[512];
 }__attribute__((aligned(0x1000)));
+}

@@ -29,8 +29,8 @@ void InstallInterruptServiceRoutines(const Interrupt::IDT_Descriptor& idt){
 }
 
 void Interrupt::SetupIDT(){
-    uint64_t pf = KernelPMM.RequestPage();
-    KernelVMM.MapMemory(IDT_VIRTUAL_MEMORY_POS,pf,PT_Flag::CachedDisabled);
+    uint64_t pf = Memory::KernelPMM.RequestPage();
+    Memory::KernelVMM.MapMemory(IDT_VIRTUAL_MEMORY_POS,pf,Memory::PT_Flag::CachedDisabled);
     Interrupt::IDT_Descriptor desc;
     desc.address = IDT_VIRTUAL_MEMORY_POS;
     desc.size = 0x0fff; //16*255 -1

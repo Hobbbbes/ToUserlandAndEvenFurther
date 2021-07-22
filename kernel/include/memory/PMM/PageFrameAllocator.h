@@ -2,6 +2,7 @@
 #include "../memory.h"
 #include "PageStack.h"
 #include "../../Util/Bitmap.h"
+namespace Memory{
 class PageFrameAllocator{
     public:
         PageFrameAllocator(EFI_MEMORY_DESCRIPTOR* mMap, uint64_t mMapSize, uint64_t mMapDescSize);
@@ -32,3 +33,4 @@ class PageFrameAllocator{
         bool InitializedSuccessfully = false;
 };
 extern PageFrameAllocator KernelPMM;
+}

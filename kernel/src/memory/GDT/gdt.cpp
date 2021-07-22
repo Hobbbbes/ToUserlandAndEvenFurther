@@ -1,5 +1,6 @@
 #include "memory/GDT/gdt.h"
 #include "memory/memory.h"
+namespace Memory{
 extern "C" void LoadGDT(GDTDescriptor* gdt);
 void SetupGDT(){
     uint64_t pf = KernelPMM.RequestPage();
@@ -33,4 +34,5 @@ void SetupGDT(){
     gdtDesc.Offset = reinterpret_cast<uint64_t>(gdt);
     gdtDesc.Size = sizeof(GDT) - 1;
     LoadGDT(&gdtDesc);
+}
 }

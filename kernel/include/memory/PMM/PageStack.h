@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "../../Util/Bitmap.h"
 //Stack grows uppwards in this case
+namespace Memory{
 class PageStack{
     public:
         PageStack(uint64_t* bufferStart, uint64_t* bufferEnd)
@@ -35,3 +36,4 @@ class PageStack{
         uint64_t* bufferEnd;
         uint64_t* stackPointer;
 }__attribute((aligned(8)));
+}

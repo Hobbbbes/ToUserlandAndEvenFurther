@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-
+namespace Memory{
 namespace Gate_Descriptor_Types{
     #define TSS_AVAILABLE 9
     #define TSS_BUSY 11
@@ -48,3 +48,5 @@ struct GDT{
 }__attribute__((packed));
 
 void SetupGDT();
+
+}
