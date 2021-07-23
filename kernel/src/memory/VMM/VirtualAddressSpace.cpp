@@ -34,10 +34,7 @@ namespace Memory{
         mappings.push_back(mapping);
     }
     void VirtualAddressSpace::unmap(const Mapping& mapping){
-        #ifdef DEBUG
-        if(! mappings.contains(mapping))
-            Util::Panic("Mapping not in mappings \n");
-        #endif
+        ASSERT(mappings.contains<Mapping>(mapping),"Mapping not in mappings \n")
         for(uint64_t i = mapping.getStart(); i < mapping.getEnd(); i += 0x1000){
             PageDirectoryEntry physicalMapping = vmm.UnmapMemory(i);
             if(physicalMapping.isValid() && mapping.mappingType != Mapping::MappingType::Physical){
@@ -50,6 +47,23 @@ namespace Memory{
         memset(pf,(uint8_t)0,0x1000);
         memcpy(&getKernelVAS().vmm.PML4Address->entries[PLM4KernelVASStartIndex], &pf->entries[PLM4KernelVASStartIndex], 512 - PLM4KernelVASStartIndex);
         return VirtualAddressSpace{VirtualMemoryManager{reinterpret_cast<PageTable*>(pf)}};
+    }
+    void Mapping::map(VirtualMemoryManager &vmm){
+        ASSERT(type == Mapping::Type::Device || type == Mapping::Type::File || type == Mapping::Type::Physical || mappingType == Mapping::MappingType::Physical,
+        "Mapping::map with File, Physical or Device Mapping")
+        uint64_t flags;
+        if(type == Mapping::Type::LibData || 
+        type == Mapping::Type::ProcessData ||
+        type == Mapping::Type::ProcessStack) {
+            flags = PT_Flag::ReadWrite;
+        } else {
+            flags = 0;
+        }
+    }
+    DeviceMemoryMapping(uint64_t vstart, uint64_t size, uint64_t physicalStart, bool kernel){
+        
+    }
+    void DeviceMemoryMapping::map(VirtualMemoryManager &vmm) {
 
     }
 }

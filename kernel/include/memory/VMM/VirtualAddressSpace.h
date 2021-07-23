@@ -15,15 +15,14 @@ namespace Memory{
                 LibCode,
                 LibData,
                 File,
-                Device,
-                Shared
+                Device
             };
             enum class MappingType : uint8_t{
                 All,
                 OnDemand,
                 Physical
             };
-            Mapping(uint64_t start, uint64_t size, Type type, MappingType mappingType, bool kernel = false);
+            Mapping(uint64_t vstart, uint64_t size, Type type, MappingType mappingType, bool kernel = false);
             inline uint64_t getStart() const {return start;}
             inline uint64_t getEnd() const {return start + (size*0x1000) - 1;}
             inline Type getType() const {return type;}
@@ -43,7 +42,7 @@ namespace Memory{
     };
     class DeviceMemoryMapping : public Mapping {
         public:
-            DeviceMemoryMapping(uint64_t start, uint64_t size, uint64_t physicalStart, bool kernel = false);
+            DeviceMemoryMapping(uint64_t vstart, uint64_t size, uint64_t physicalStart, bool kernel = false);
             inline uint64_t getPhysicalStart() const {return physicalStart;}
             void map(VirtualMemoryManager &vmm) override;
         private:
@@ -52,17 +51,21 @@ namespace Memory{
 
     class FileMemoryMapping : public Mapping {
         public:
-            FileMemoryMapping(uint64_t start, uint64_t size, bool kernel = false);
+            FileMemoryMapping(uint64_t vstart, uint64_t size, bool kernel = false);
+            void map(VirtualMemoryManager &mm) override;
             //map file somehow
         private:
             //File Handel
     };
-    /*
-    class SharedMemoryMapping : public Mapping {
+    
+    class PhysicalMemoryMapping : public Mapping {
         public:
-
-    }
-    */
+            PhysicalMemoryMapping(uint64_t vstart, const Util::vector<uint64_t>& physicalAddresses);
+            void map(VirtualMemoryManager &vmm) override;
+        private:
+            Util::vector<uint64_t> physicalAddresses;
+    };
+    
     class VirtualAddressSpace{
         public:
             inline VirtualAddressSpace(VirtualMemoryManager& vmmManager) : vmm(vmmManager){}

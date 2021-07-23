@@ -1,6 +1,5 @@
 #pragma once
 #include <stdint.h>
-#include <limits>
 namespace Memory{
 enum PT_Flag{
     Present = 1<<0,
@@ -24,7 +23,7 @@ class PageDirectoryEntry{
     private:
         uint64_t value;
     public:
-        PageDirectoryEntry() : value(std::numeric_limits<uint64_t>::max()){}
+        PageDirectoryEntry() : value(0){}
         inline void SetFlag(uint64_t flags,bool set_unset){
             value &= ~flags;
             if(set_unset){
@@ -45,7 +44,7 @@ class PageDirectoryEntry{
         inline void clear(){
             value = 0;
         }
-        inline bool isValid() const {return std::numeric_limits<uint64_t>::max() == value;}
+        inline bool isValid() const {return 0 == value;}
 };
 
 struct PageTable{

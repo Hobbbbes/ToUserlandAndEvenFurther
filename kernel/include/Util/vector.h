@@ -101,6 +101,14 @@ class vector{
             }
             return false;
         }
+        template<typename U>
+        bool contains(const U& v) requires std::equality_comparable_with<T,U> {
+            for(const T& inVec : *this){
+                if(inVec == v)
+                    return true;
+            }
+            return false;
+        }
         inline void reserve(uint64_t capacity) {
             if(this->capacity >= capacity) return;
             this->capacity = capacity;
