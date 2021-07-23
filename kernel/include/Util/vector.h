@@ -29,7 +29,54 @@ class vector{
             for(uint64_t i = 0; i<size; i++)
                 buff[i] = init;
         }
-        void push_back(T value){
+
+        vector(const vector& vec){
+            if(buff != nullptr)
+                delete[] buff;
+            buff = new T[vec.capacity];
+            size = vec.size;
+            capacity = vec.capacity;
+            for(uint64_t i = 0; i<vec.size;i++)
+                buff[i] = vec[i];
+            
+        }
+
+        vector& operator=(const vector& vec){
+            if(buff != nullptr)
+                delete[] buff;
+            buff = new T[vec.capacity];
+            size = vec.size;
+            capacity = vec.capacity;
+            for(uint64_t i = 0; i<vec.size;i++)
+                buff[i] = vec[i];
+            return *this;
+        }
+        vector(vector&& vec){
+            buff = vec.buff;
+            size = vec.size;
+            capacity = vec.capacity;
+            vec.buff = nullptr;
+            vec.size = 0;
+            vec.capacity = 0;
+        }
+        
+        void operator=(vector&& vec){
+            buff = vec.buff;
+            size = vec.size;
+            capacity = vec.capacity;
+            vec.buff = nullptr;
+            vec.size = 0;
+            vec.capacity = 0;
+        }
+
+        void push_back(const T& value){
+            if(size + 1 > capacity){
+                ++capacity *= 2;
+                swapBuffers();
+            }
+            buff[size++] = value;
+        }
+        void push_back(const T&& value){
             if(size + 1 > capacity){
                 ++capacity *= 2;
                 swapBuffers();

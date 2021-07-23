@@ -18,17 +18,17 @@ void IdentityMapPhysicalMemory(BootInfo* bi){
     memset(bi->framebuffer->BaseAddress,(uint8_t)0,bi->framebuffer->BufferSize);
 }
 
-void InitHeap(){
+void InitHeap(Memory::VirtualMemoryManager& vmm){
     for(uint64_t i = 0; i<INIT_HEAP_SIZE;i++){
-        uint64_t page = Memory::KernelPMM.RequestPage();
-        Memory::KernelVMM.MapMemory(HEAP_START + (i * 0x1000), page);
+        uint64_t page = Memory::PageFrameAllocator::getPMM().RequestPage();
+        vmm.MapMemory(HEAP_START + (i * 0x1000), page);
     }
     Memory::initHeap(HEAP_START,HEAP_START + (INIT_HEAP_SIZE * 0x1000));
 }
 
 void MapStack(){
     for(uint64_t i = 0;i<=STACK_SIZE;i++){
-        uint64_t page = Memory::KernelPMM.RequestPage();
+        uint64_t page = Memory::PageFrameAllocator::getPMM().RequestPage();
         Memory::KernelVMM.MapMemory(STACK_START + (i * 0x1000), page);
     }
 }
@@ -37,13 +37,13 @@ extern "C" [[noreturn]] void _start(BootInfo* bootinfo) {
     Graphics::KernelDrawer = Graphics::TextDrawer(*bootinfo->framebuffer,*bootinfo->psf1_font);
     Graphics::KernelDrawer.print("In Kernel\n");
     asm("hlt");
-    Memory::KernelPMM = Memory::PageFrameAllocator(bootinfo->mMap,bootinfo->mMapSize,bootinfo->mMapDescriptorSize);
-    
+    Memory::PageFrameAllocator pmm = Memory::PageFrameAllocator(bootinfo->mMap,bootinfo->mMapSize,bootinfo->mMapDescriptorSize);
+    Memory::VirtualMemoryManager vmm{reinterpret_cast<Memory::PageTable*>(Memory::PageFrameAllocator::getPMM().RequestPage())};
     uint64_t kernelSizePages = (reinterpret_cast<uint64_t>(&_KernelEnd) - reinterpret_cast<uint64_t>(&_KernelStart)) / 0x1000 + 1;
     
-    Memory::KernelPMM.LockPages(reinterpret_cast<uint64_t>(&_KernelStart),kernelSizePages); 
+    Memory::PageFrameAllocator::getPMM().LockPages(reinterpret_cast<uint64_t>(&_KernelStart),kernelSizePages); 
     
-    uint64_t PLM4 = Memory::KernelPMM.RequestPage();
+    uint64_t PLM4 = Memory::PageFrameAllocator::getPMM().RequestPage();
     memset(reinterpret_cast<void*>(PLM4), (uint8_t)0,0x1000);
     Memory::KernelVMM = Memory::VirtualMemoryManager(reinterpret_cast<Memory::PageTable*>(PLM4));
 

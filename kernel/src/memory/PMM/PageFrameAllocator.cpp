@@ -45,7 +45,7 @@ PageFrameAllocator::PageFrameAllocator(EFI_MEMORY_DESCRIPTOR* mMap, uint64_t mMa
     KernelPMM = *this;
 }
 
-PageFrameAllocator::PageFrameAllocator(){}
+//PageFrameAllocator::PageFrameAllocator(){}
 
 PageFrameAllocator& PageFrameAllocator::getPMM(){
     #ifdef DEBUG

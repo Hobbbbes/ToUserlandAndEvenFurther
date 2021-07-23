@@ -96,7 +96,7 @@ PageDirectoryEntry VirtualMemoryManager::UnmapMemory(const uint64_t virtualAddr)
 
     return PDE;
 }
-PageDirectoryEntry VirtualMemoryManager::GetMapping(const uint64_t virtualAddr){
+PageDirectoryEntry VirtualMemoryManager::GetMapping(const uint64_t virtualAddr)const{
     VirtualMemoryManager::PageStructureIndizes indizes = getIndizes(virtualAddr);
     PageDirectoryEntry PDE;
     PDE = PML4Address->entries[indizes.PDP_i];
@@ -127,7 +127,7 @@ PageDirectoryEntry VirtualMemoryManager::GetMapping(const uint64_t virtualAddr){
     }
 }
 
-VirtualMemoryManager::PageStructureIndizes VirtualMemoryManager::getIndizes(uint64_t virtualAddr){
+VirtualMemoryManager::PageStructureIndizes VirtualMemoryManager::getIndizes(uint64_t virtualAddr) const {
     VirtualMemoryManager::PageStructureIndizes res;
     virtualAddr >>= 12;
     res.P_i = virtualAddr & 0x1ff;

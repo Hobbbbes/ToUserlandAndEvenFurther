@@ -6,7 +6,7 @@ namespace Memory{
 class PageFrameAllocator{
     public:
         PageFrameAllocator(EFI_MEMORY_DESCRIPTOR* mMap, uint64_t mMapSize, uint64_t mMapDescSize);
-        PageFrameAllocator();
+        //PageFrameAllocator();
         uint64_t RequestPage();
         void FreePage(uint64_t addr);
         void FreePages(uint64_t addr, uint64_t count);

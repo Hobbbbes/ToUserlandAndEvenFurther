@@ -8,7 +8,7 @@ class VirtualMemoryManager{
         VirtualMemoryManager();
         PageDirectoryEntry* MapMemory(const uint64_t virtualAddr, const uint64_t physicalAddr, uint64_t flags = 0);
         PageDirectoryEntry UnmapMemory(const uint64_t virtualAddr);
-        PageDirectoryEntry GetMapping(const uint64_t virtualAddr);
+        PageDirectoryEntry GetMapping(const uint64_t virtualAddr)const;
     private:
         PageTable* PML4Address;
         struct PageStructureIndizes{
@@ -18,7 +18,7 @@ class VirtualMemoryManager{
             uint64_t P_i;
         };
         
-        PageStructureIndizes getIndizes(uint64_t virtualAddr);
+        PageStructureIndizes getIndizes(uint64_t virtualAddr) const;
         friend VirtualAddressSpace;
 };
 }
