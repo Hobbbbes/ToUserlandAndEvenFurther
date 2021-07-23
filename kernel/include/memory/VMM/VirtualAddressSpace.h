@@ -3,6 +3,7 @@
 #include "memory/VMM/VirtualMemoryManager.h"
 #include "Util/vector.h"
 namespace Memory{
+    
     class Mapping{
         public:
             enum class Type : uint8_t {
@@ -27,16 +28,20 @@ namespace Memory{
             inline uint64_t getSize() const {return size;}
             inline bool kernelMapping() const {return kernel;}
             inline bool containsAddress(uint64_t addr) const {return addr >= getStart() && addr <= getEnd();}
+            inline bool operator == (const Mapping &other) const {return other.start == start && other.size == size && other.type == type;}
+            inline bool operator != (const Mapping &other) const {return ! (other == *this);}
         private:
             uint64_t start;
             uint64_t size;
             Type type;
             MappingType mappingType;
             bool kernel;
+        friend VirtualAddressSpace;
     };
     class DeviceMemoryMapping : public Mapping {
         public:
             DeviceMemoryMapping(uint64_t start, uint64_t size, uint64_t physicalStart, bool kernel = false);
+            inline uint64_t getPhysicalStart() const {return physicalStart;}
         private:
             uint64_t physicalStart;
     };
@@ -49,6 +54,7 @@ namespace Memory{
     };
     class VirtualAddressSpace{
         public:
+            inline VirtualAddressSpace(VirtualMemoryManager& vmmManager) : vmmManager(vmmManager){}
             inline VirtualAddressSpace(VirtualMemoryManager vmmManager) : vmmManager(vmmManager){}
             uint64_t mappingForAddressIndex(uint64_t addr) const;
             inline const Mapping& mappingByIndex(uint64_t index) const {return mappings[index];}
@@ -57,12 +63,12 @@ namespace Memory{
             }
             void map(const Mapping& mapping);
             void unmap(const Mapping& mapping);
-            
+            static VirtualAddressSpace newUserVAS();
+            inline static VirtualAddressSpace& getKernelVAS() {return VirtualAddressSpace::KernelVAS;}
             
         private:
             VirtualMemoryManager vmmManager;
             Util::vector<Mapping> mappings;
-
-        friend Mapping;
+            static VirtualAddressSpace KernelVAS;
     };
 }

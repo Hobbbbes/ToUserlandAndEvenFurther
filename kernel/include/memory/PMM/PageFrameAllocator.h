@@ -15,7 +15,7 @@ class PageFrameAllocator{
         uint64_t GetFreeRam()const;
         uint64_t GetUsedRam()const;
         uint64_t GetReservedRam()const;
-
+        static PageFrameAllocator& getPMM();
     private:
         void LockPage(uint64_t addr);
 
@@ -33,5 +33,4 @@ class PageFrameAllocator{
         bool InitializedSuccessfully = false;
         static PageFrameAllocator KernelPMM;
 };
-extern PageFrameAllocator KernelPMM;
 }

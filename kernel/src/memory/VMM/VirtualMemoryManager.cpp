@@ -2,7 +2,6 @@
 #include "memory/PMM/PageFrameAllocator.h"
 #include "memory/memory.h"
 namespace Memory{
-VirtualMemoryManager KernelVMM;
 
 VirtualMemoryManager::VirtualMemoryManager(PageTable* PML4Addr) : PML4Address(PML4Addr){}
 VirtualMemoryManager::VirtualMemoryManager() : PML4Address(nullptr){}
@@ -13,7 +12,7 @@ PageDirectoryEntry* VirtualMemoryManager::MapMemory(const uint64_t virtAddr, con
     PDE = PML4Address->entries[indizes.PDP_i];
     PageTable* PDP;
     if(!PDE.GetFlag(PT_Flag::Present)){
-        PDP = reinterpret_cast<PageTable*>(KernelPMM.RequestPage());
+        PDP = reinterpret_cast<PageTable*>(PageFrameAllocator::getPMM().RequestPage());
         memset(PDP,(uint8_t)0x00,0x1000);
         PDE.SetAddress(reinterpret_cast<uint64_t>(PDP) >> 12);
         PDE.SetFlag(PT_Flag::Present, true);
@@ -25,7 +24,7 @@ PageDirectoryEntry* VirtualMemoryManager::MapMemory(const uint64_t virtAddr, con
     PDE = PDP->entries[indizes.PD_i];
     PageTable* PD;
     if(!PDE.GetFlag(PT_Flag::Present)){
-        PD = reinterpret_cast<PageTable*>(KernelPMM.RequestPage());
+        PD = reinterpret_cast<PageTable*>(PageFrameAllocator::getPMM().RequestPage());
         memset(PD,(uint8_t)0x00,0x1000);
         PDE.SetAddress(reinterpret_cast<uint64_t>(PD) >> 12);
         PDE.SetFlag(PT_Flag::Present, true);
@@ -37,7 +36,7 @@ PageDirectoryEntry* VirtualMemoryManager::MapMemory(const uint64_t virtAddr, con
     PDE = PD->entries[indizes.PT_i];
     PageTable* PT;
     if(!PDE.GetFlag(PT_Flag::Present)){
-        PT = reinterpret_cast<PageTable*>(KernelPMM.RequestPage());
+        PT = reinterpret_cast<PageTable*>(PageFrameAllocator::getPMM().RequestPage());
         memset(PT,(uint8_t)0x00,0x1000);
         PDE.SetAddress(reinterpret_cast<uint64_t>(PT) >> 12);
         PDE.SetFlag(PT_Flag::Present, true);
@@ -55,47 +54,47 @@ PageDirectoryEntry* VirtualMemoryManager::MapMemory(const uint64_t virtAddr, con
     return &PT->entries[indizes.P_i];
 }
 
-void VirtualMemoryManager::UnmapMemory(const uint64_t virtualAddr){
+PageDirectoryEntry VirtualMemoryManager::UnmapMemory(const uint64_t virtualAddr){
     VirtualMemoryManager::PageStructureIndizes indizes = getIndizes(virtualAddr);
     PageDirectoryEntry PDE;
     PDE = PML4Address->entries[indizes.PDP_i];
     PageTable* PDP;
     if(!PDE.GetFlag(PT_Flag::Present)){
-        return;
+        return PageDirectoryEntry();
     } else {
         PDP = reinterpret_cast<PageTable*>(reinterpret_cast<uint64_t>(PDE.GetAddress()) << 12);
     }
     PDE = PDP->entries[indizes.PD_i];
     PageTable* PD;
     if(!PDE.GetFlag(PT_Flag::Present)){
-        return;
+        return PageDirectoryEntry();
     } else {
         PD = reinterpret_cast<PageTable*>(reinterpret_cast<uint64_t>(PDE.GetAddress()) << 12);
     }
     PDE = PD->entries[indizes.PT_i];
     PageTable* PT;
     if(!PDE.GetFlag(PT_Flag::Present)){
-        return;
+        return PageDirectoryEntry();
     } else {
         PT = reinterpret_cast<PageTable*>(reinterpret_cast<uint64_t>(PDE.GetAddress()) << 12);
     }
-
+    PDE = PT->entries[indizes.P_i];
     memset(&PT->entries[indizes.P_i],uint8_t(0),sizeof(PageDirectoryEntry));
     if(memcmp((void*)PT,(uint8_t)0,0x1000)){
         uint64_t pf = this->GetMapping(reinterpret_cast<uint64_t>(PT)).GetAddress();
-        KernelPMM.FreePage(pf);
+        PageFrameAllocator::getPMM().FreePage(pf);
         if(memcmp((void*)PD,(uint8_t)0,0x1000)){
             uint64_t pf = this->GetMapping(reinterpret_cast<uint64_t>(PD)).GetAddress();
-            KernelPMM.FreePage(pf);
+            PageFrameAllocator::getPMM().FreePage(pf);
             if(memcmp((void*)PDP,(uint8_t)0,0x1000)){
                 uint64_t pf = this->GetMapping(reinterpret_cast<uint64_t>(PDP)).GetAddress();
-                KernelPMM.FreePage(pf);
+                PageFrameAllocator::getPMM().FreePage(pf);
             }
         }
 
     }
 
-
+    return PDE;
 }
 PageDirectoryEntry VirtualMemoryManager::GetMapping(const uint64_t virtualAddr){
     VirtualMemoryManager::PageStructureIndizes indizes = getIndizes(virtualAddr);

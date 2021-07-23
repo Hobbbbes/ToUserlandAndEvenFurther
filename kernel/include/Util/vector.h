@@ -3,6 +3,7 @@
 #include "memory/memory.h"
 #include "Util/panic.h"
 #include <type_traits>
+#include <concepts>
 namespace Util{
 template<typename T> 
 class vector{
@@ -10,6 +11,12 @@ class vector{
         T* buff = nullptr;
         uint64_t size = 0;
         uint64_t capacity = 0;
+        void swapBuffers(){
+            T* newBuff = reinterpret_cast<T*>(new uint8_t[capacity * sizeof(T)]);
+            memcpy(buff,newBuff,size);
+            delete[] buff;
+            buff = newBuff;
+        }
     public:
     
         inline vector(){}
@@ -25,10 +32,7 @@ class vector{
         void push_back(T value){
             if(size + 1 > capacity){
                 ++capacity *= 2;
-                T* newBuff = reinterpret_cast<T*>(new uint8_t[capacity * sizeof(T)]);
-                memcpy(buff,newBuff,size);
-                delete[] buff;
-                buff = newBuff;
+                swapBuffers();
             }
             buff[size++] = value;
         }
@@ -43,5 +47,17 @@ class vector{
         inline T* end() const {return buff + size - 1;}
         inline uint64_t getSize() const {return size;}
         inline uint64_t getCapacity() const {return capacity;}
+        inline bool contains(const T& v) requires std::equality_comparable<T> {
+            for(const T& inVec : this){
+                if(inVec == v)
+                    return true;
+            }
+            return false;
+        }
+        inline void reserve(uint64_t capacity) {
+            if(this->capacity >= capacity) return;
+            this->capacity = capacity;
+            swapBuffers();
+        }
 };
 }

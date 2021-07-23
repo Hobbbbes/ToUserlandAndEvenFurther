@@ -2,7 +2,7 @@
 #include "KernelUtil.h"
 #include "Graphics/print.h"
 #include "memory/memory_defines.h"
-
+#include "memory/VMM/VirtualAddressSpace.h"
 extern "C" [[noreturn]] void init_stack(BootInfo* BootInfo, uint64_t stackBase);
 
 void IdentityMapPhysicalMemory(BootInfo* bi){

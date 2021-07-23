@@ -1,7 +1,7 @@
 #include "memory/PMM/PageFrameAllocator.h"
 #include "Util/panic.h"
 namespace Memory{
-PageFrameAllocator KernelPMM;
+
 
 PageFrameAllocator::PageFrameAllocator(EFI_MEMORY_DESCRIPTOR* mMap, uint64_t mMapSize, uint64_t mMapDescSize){
     
@@ -42,9 +42,18 @@ PageFrameAllocator::PageFrameAllocator(EFI_MEMORY_DESCRIPTOR* mMap, uint64_t mMa
 
     pageStack.InitPush(pageBitmap);
     InitializedSuccessfully = true;
+    KernelPMM = *this;
 }
 
 PageFrameAllocator::PageFrameAllocator(){}
+
+PageFrameAllocator& PageFrameAllocator::getPMM(){
+    #ifdef DEBUG
+    if(!KernelPMM.isInitialized())
+        Util::Panic("KernelPMM not initialized \n");
+    #endif
+    return KernelPMM;
+}
 
 void PageFrameAllocator::FreePage(uint64_t address){
     uint64_t index = address / 4096;
