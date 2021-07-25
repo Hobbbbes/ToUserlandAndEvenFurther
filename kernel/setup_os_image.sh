@@ -10,6 +10,6 @@ fi
 LOOP=`cat loopdevice`
 IMAGE_PATH=`losetup --list --noheadings -O BACK-FILE ${LOOP}`
 if ! [ -f "${IMAGE_PATH}" ]; then 
-    losetup --partscan --show --find "$BUILDDIR/$OSNAME.img" > loopdevice
-    partprobe `cat loopdevice` || true > /dev/null
+    sudo losetup --partscan --show --find "$BUILDDIR/$OSNAME.img" > loopdevice
+    sudo partprobe `cat loopdevice` || true > /dev/null
 fi

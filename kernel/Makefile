@@ -65,12 +65,12 @@ setup: img
 	cp $(BUILDDIR)/zap-light16.psf $(EFI_PART_MOUNT_PATH)/zap-light16.psf
 	sudo umount $(LOOP)p1 
 	sudo umount $(LOOP)p2
-	losetup -d $(LOOP)
+	sudo losetup -d $(LOOP)
 
 add_loop: img
 	@echo $(LOOP)
 remove_loop: umount
-	-losetup -d $(LOOP)
+	-sudo losetup -d $(LOOP)
 umount:
 	-sudo umount $(LOOP)p1 
 	-sudo umount $(LOOP)p2
