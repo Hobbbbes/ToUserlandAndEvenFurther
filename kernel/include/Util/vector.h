@@ -123,16 +123,16 @@ class vector{
             }
         }
         template<typename U>
-        bool remove(const U& v) requires std::equality_comparable_with<T,U> {
+        void remove(const U& v) requires std::equality_comparable_with<T,U> {
             for(uint64_t i = 0; i < size ; i++){
                 if(buff[i] = v)
                     remove(i);
             }
         }
-        
+
         void remove(uint64_t index) {
             for(uint64_t i = index + 1; i < size; i++){
-                buff[i-1] = Util::move(buff[i]);
+                buff[i-1] = move(buff[i]);
             }
             size -= 1;
         }

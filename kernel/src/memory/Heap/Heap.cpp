@@ -1,6 +1,7 @@
 #include "memory/Heap/Heap.h"
 #include "memory/PMM/PageFrameAllocator.h"
-#include "memory/VMM/VirtualMemoryManager.h"
+#include "memory/VMM/VirtualAddressSpace.h"
+#include "Util/uniqeptr.h"
 #include "Util/panic.h"
 struct Heap{
     uint64_t begin;
@@ -61,13 +62,16 @@ bool growHeap(uint64_t to_grow){
     if (pages < MIN_HEAP_GROWTH_PAGES){
         pages = MIN_HEAP_GROWTH_PAGES;
     }
-    for(uint64_t p = 0; p<pages; p++){
-        if(Memory::KernelPMM.GetFreeRam() == 0){
+    if(Memory::PageFrameAllocator::getPMM().GetFreeRam() == 0){
             return false;
-        }
-        uint64_t pf = Memory::KernelPMM.RequestPage();
-        Memory::KernelVMM.MapMemory(kernelHeap.end + (p * 0x1000), pf);
     }
+    for(uint64_t p = 0; p<pages; p++){
+        uint64_t pf = Memory::PageFrameAllocator::getPMM().RequestPage();
+        const Memory::VirtualMemoryManager& kvmm = Memory::VirtualAddressSpace::getKernelVAS().getVMM();
+        const_cast<Memory::VirtualMemoryManager&>(kvmm).MapMemory(kernelHeap.end + (p * 0x1000), pf);
+    }
+    const Memory::Mapping& heapMapping = Memory::VirtualAddressSpace::getKernelVAS().mappingForAddress(kernelHeap.begin);
+    const_cast<Memory::Mapping&>(heapMapping).setSize(heapMapping.getSize() + pages);
     HeapEntryHeader* tail = head->previousHeader;
     if (reinterpret_cast<uint64_t>(tail) + tail->size + sizeof(HeapEntryHeader) == kernelHeap.end){
         tail->size += pages*0x1000;
@@ -92,10 +96,16 @@ void shrinkHeap(){
         tail->size -= HEAP_SHRINK * 0x1000;
         kernelHeap.size -= HEAP_SHRINK*0x1000;
         for(uint64_t p = 1; p <= HEAP_SHRINK; p++){
-            uint64_t pf = Memory::KernelVMM.GetMapping(kernelHeap.end - (p*0x1000)).GetAddress();
-            Memory::KernelVMM.UnmapMemory(kernelHeap.end - (p*0x1000));
-            Memory::KernelPMM.FreePage(pf);
+            //uint64_t pf = Memory::KernelVMM.GetMapping(kernelHeap.end - (p*0x1000)).GetAddress();
+            //Memory::KernelVMM.UnmapMemory(kernelHeap.end - (p*0x1000));
+            //Memory::KernelPMM.FreePage(pf << 12);
+            const Memory::VirtualMemoryManager& kvmm = Memory::VirtualAddressSpace::getKernelVAS().getVMM();
+            uint64_t pf = const_cast<Memory::VirtualMemoryManager&>(kvmm).GetMapping(kernelHeap.end - (p * 0x1000)).GetAddress() << 12;
+            const_cast<Memory::VirtualMemoryManager&>(kvmm).UnmapMemory(kernelHeap.end - (p*0x1000));
+            Memory::PageFrameAllocator::getPMM().FreePage(pf);
         }
+        const Memory::Mapping& heapMapping = Memory::VirtualAddressSpace::getKernelVAS().mappingForAddress(kernelHeap.begin);
+        const_cast<Memory::Mapping&>(heapMapping).setSize(heapMapping.getSize() - HEAP_SHRINK);
         kernelHeap.end -= HEAP_SHRINK*0x1000;
     }
 }

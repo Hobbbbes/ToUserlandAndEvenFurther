@@ -3,6 +3,7 @@
 #include "memory/Heap/Heap.h"
 #include "memory/PMM/PageFrameAllocator.h"
 #include "memory/VMM/VirtualMemoryManager.h"
+#include "memory/VMM/VirtualAddressSpace.h"
 #include "memory/memory_defines.h"
 #include "Util/uniqeptr.h"
 uint64_t GetMemorySize(EFI_MEMORY_DESCRIPTOR* mMap, uint64_t mMapEntries, uint64_t mMapDescSize);

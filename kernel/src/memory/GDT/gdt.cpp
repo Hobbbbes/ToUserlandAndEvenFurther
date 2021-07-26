@@ -3,8 +3,13 @@
 namespace Memory{
 extern "C" void LoadGDT(GDTDescriptor* gdt);
 void SetupGDT(){
-    uint64_t pf = KernelPMM.RequestPage();
-    KernelVMM.MapMemory(GDT_VIRTUAL_MEMORY_POS,pf);
+    //uint64_t pf = KernelPMM.RequestPage();
+    //KernelVMM.MapMemory(GDT_VIRTUAL_MEMORY_POS,pf);
+    Memory::VirtualAddressSpace::getKernelVAS().map(
+        Util::UniquePtr<Memory::Mapping>(
+            new SpecialMapping(GDT_VIRTUAL_MEMORY_POS,1,Memory::PT_Flag::ReadWrite | Memory::PT_Flag::CachedDisabled | Memory::PT_Flag::UserSupper)
+        )
+    );
     GDT* gdt = reinterpret_cast<GDT*>(GDT_VIRTUAL_MEMORY_POS);
     memset(gdt,(uint32_t)0,0x1000/32); //Set page and therefor Null Segments to 0
     gdt->KernelCode = GDTEntry();

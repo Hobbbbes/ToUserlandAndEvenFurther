@@ -1,7 +1,7 @@
 #pragma once
 #include "Util/vector.h"
 #include "memory/memory.h"
-
+#include "Util/uniqeptr.h"
 namespace Memory {
     class Mapping {
         public:
@@ -13,7 +13,8 @@ namespace Memory {
                 LibCode,
                 LibData,
                 File,
-                Device
+                Device,
+                Special
             };
             enum class MappingType : uint8_t{
                 All,
@@ -29,6 +30,7 @@ namespace Memory {
             inline bool containsAddress(uint64_t addr) const {return addr >= getStart() && addr <= getEnd();}
             inline bool operator == (const Mapping &other) const {return other.start == start && other.size == size && other.type == type;}
             inline bool operator != (const Mapping &other) const {return ! (other == *this);}
+            inline void setSize(uint64_t size) {this->size = size;}
             virtual void map(VirtualMemoryManager& vmm)const;
             virtual void unmap(VirtualMemoryManager &vmm)const;
         protected:
@@ -37,7 +39,7 @@ namespace Memory {
             Type type;
             MappingType mappingType;
             bool kernel;
-            bool mapped = false;
+            bool mapped;
         friend VirtualAddressSpace;
     };
     
@@ -70,10 +72,19 @@ namespace Memory {
             Util::vector<uint64_t> physicalAddresses;
     };
 
+    class SpecialMapping : public Mapping {
+        public:
+            SpecialMapping(uint64_t vstart,uint64_t size, uint64_t flags);
+            void map(VirtualMemoryManager &vmm) const override;
+            void unmap(VirtualMemoryManager &vmm) const override;
+        private:
+            uint64_t flags;
+    };
+
     class VirtualAddressSpace{
         public:
             inline VirtualAddressSpace(VirtualMemoryManager& vmmManager) : vmm(vmmManager){}
-            inline VirtualAddressSpace(VirtualMemoryManager vmmManager) : vmm(vmmManager){}
+            inline VirtualAddressSpace(VirtualMemoryManager&& vmmManager) : vmm(vmmManager){}
             uint64_t mappingForAddressIndex(uint64_t addr) const;
             inline const Mapping& mappingByIndex(uint64_t index) const {return *mappings[index];}
             inline const Mapping& mappingForAddress(uint64_t addr) const {
@@ -83,6 +94,7 @@ namespace Memory {
             void unmap(const Mapping& mapping);
             static VirtualAddressSpace newUserVAS();
             inline static VirtualAddressSpace& getKernelVAS() {return VirtualAddressSpace::KernelVAS;}
+            inline static void initKernelVAS(VirtualMemoryManager& vmm) {KernelVAS = VirtualAddressSpace(vmm);}
             inline const VirtualMemoryManager& getVMM() const {return vmm;}
             inline const Util::vector<Util::UniquePtr<Mapping>>& getMappings() const {return mappings;}
             

@@ -6,6 +6,8 @@ namespace Util{
         public:
             UniquePtr(){ptr = nullptr;};
             UniquePtr(T* ptr) : ptr(ptr){}
+            template<typename U>
+            UniquePtr(U* uptr) requires std::derived_from<U,T> : ptr(reinterpret_cast<T*>(uptr)){}
             UniquePtr(const UniquePtr& uptr) = delete;
             UniquePtr<T>& operator=(const UniquePtr& ptr) = delete;
 
