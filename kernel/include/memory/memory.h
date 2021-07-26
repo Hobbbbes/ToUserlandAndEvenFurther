@@ -12,3 +12,10 @@ bool memcmp(const void* first,const  void* second, const uint64_t count);
 bool memcmp(const void* start, const uint8_t val, const uint64_t count);
 void memcpy(const void* source,void* dest, const uint64_t count);
 extern uint64_t memorySizeBytes;
+namespace Util{
+    template<typename T>
+    inline constexpr std::remove_reference_t<T>&& move(T&& t) noexcept
+    {
+        return static_cast<std::remove_reference_t<T>&&>(t);
+    }
+}

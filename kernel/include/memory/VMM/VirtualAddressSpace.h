@@ -29,13 +29,15 @@ namespace Memory {
             inline bool containsAddress(uint64_t addr) const {return addr >= getStart() && addr <= getEnd();}
             inline bool operator == (const Mapping &other) const {return other.start == start && other.size == size && other.type == type;}
             inline bool operator != (const Mapping &other) const {return ! (other == *this);}
-            virtual void map(VirtualMemoryManager& vmm);
-        private:
+            virtual void map(VirtualMemoryManager& vmm)const;
+            virtual void unmap(VirtualMemoryManager &vmm)const;
+        protected:
             uint64_t start;
             uint64_t size;
             Type type;
             MappingType mappingType;
             bool kernel;
+            bool mapped = false;
         friend VirtualAddressSpace;
     };
     
@@ -43,12 +45,13 @@ namespace Memory {
         public:
             DeviceMapping(uint64_t vstart, uint64_t size, uint64_t physicalStart, bool kernel = false);
             inline uint64_t getPhysicalStart() const {return physicalStart;}
-            void map(VirtualMemoryManager &vmm) override;
+            void map(VirtualMemoryManager &vmm) const override;
+            void unmap(VirtualMemoryManager &vmm) const override;
         private:
             uint64_t physicalStart;
         
     };
-
+/*
     class FileMapping : public Mapping {
         public:
             FileMapping(uint64_t vstart, uint64_t size, bool kernel = false);
@@ -57,11 +60,12 @@ namespace Memory {
         private:
             //File Handel
     };
-    
+*/ 
     class PhysicalMapping : public Mapping {
         public:
-            PhysicalMapping(uint64_t vstart, const Util::vector<uint64_t>& physicalAddresses);
-            void map(VirtualMemoryManager &vmm) override;
+            PhysicalMapping(uint64_t vstart,const Type type, const Util::vector<uint64_t>& physicalAddresses, bool kernel = false);
+            void map(VirtualMemoryManager &vmm) const override;
+            void unmap(VirtualMemoryManager &vmm) const override;
         private:
             Util::vector<uint64_t> physicalAddresses;
     };

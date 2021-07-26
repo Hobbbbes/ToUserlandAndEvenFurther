@@ -13,7 +13,8 @@ class vector{
         uint64_t capacity = 0;
         void swapBuffers(){
             T* newBuff = reinterpret_cast<T*>(new uint8_t[capacity * sizeof(T)]);
-            memcpy(buff,newBuff,size);
+            for(uint64_t i = 0; i<size;i++)
+                newBuff[i] = move(buff[i]);
             delete[] buff;
             buff = newBuff;
         }
@@ -95,7 +96,7 @@ class vector{
         inline uint64_t getSize() const {return size;}
         inline uint64_t getCapacity() const {return capacity;}
         inline bool contains(const T& v) requires std::equality_comparable<T> {
-            for(const T& inVec : this){
+            for(const T& inVec : *this){
                 if(inVec == v)
                     return true;
             }
@@ -109,10 +110,32 @@ class vector{
             }
             return false;
         }
-        inline void reserve(uint64_t capacity) {
+        void reserve(uint64_t capacity) {
             if(this->capacity >= capacity) return;
             this->capacity = capacity;
             swapBuffers();
         }
+        void remove(const T& v) requires std::equality_comparable<T> {
+            for(uint64_t i = 0; i < size ; i++){
+                if(buff[i] = v)
+                    remove(i);
+
+            }
+        }
+        template<typename U>
+        bool remove(const U& v) requires std::equality_comparable_with<T,U> {
+            for(uint64_t i = 0; i < size ; i++){
+                if(buff[i] = v)
+                    remove(i);
+            }
+        }
+        
+        void remove(uint64_t index) {
+            for(uint64_t i = index + 1; i < size; i++){
+                buff[i-1] = Util::move(buff[i]);
+            }
+            size -= 1;
+        }
+
 };
 }
