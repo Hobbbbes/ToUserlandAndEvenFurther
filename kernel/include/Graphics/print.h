@@ -1,7 +1,7 @@
 #pragma once
-#include "../PreBoot/Framebuffer.h"
-#include "../PreBoot/PSF1_Font.h"
-#include "../Util/Vector2.h"
+#include "PreBoot/Framebuffer.h"
+#include "PreBoot/PSF1_Font.h"
+#include "Util/Vector2.h"
 #include <type_traits>
 #include <limits>
 namespace Graphics{

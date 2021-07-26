@@ -1,7 +1,7 @@
 #pragma once
-#include "../memory.h"
+#include "memory/memory.h"
 #include "PageStack.h"
-#include "../../Util/Bitmap.h"
+#include "Util/Bitmap.h"
 namespace Memory{
 class PageFrameAllocator{
     public:

@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include "../../Util/Bitmap.h"
+#include "Util/Bitmap.h"
 //Stack grows uppwards in this case
 namespace Memory{
 class PageStack{

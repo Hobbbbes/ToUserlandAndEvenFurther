@@ -1,11 +1,9 @@
 #pragma once
-#include <stdint.h>
-#include "memory/VMM/VirtualMemoryManager.h"
 #include "Util/vector.h"
 #include "memory/memory.h"
-namespace Memory{
-    
-    class Mapping{
+
+namespace Memory {
+    class Mapping {
         public:
             enum class Type : uint8_t {
                 ProcessCode,
@@ -40,32 +38,34 @@ namespace Memory{
             bool kernel;
         friend VirtualAddressSpace;
     };
-    class DeviceMemoryMapping : public Mapping {
+    
+    class DeviceMapping : public Mapping {
         public:
-            DeviceMemoryMapping(uint64_t vstart, uint64_t size, uint64_t physicalStart, bool kernel = false);
+            DeviceMapping(uint64_t vstart, uint64_t size, uint64_t physicalStart, bool kernel = false);
             inline uint64_t getPhysicalStart() const {return physicalStart;}
             void map(VirtualMemoryManager &vmm) override;
         private:
             uint64_t physicalStart;
+        
     };
 
-    class FileMemoryMapping : public Mapping {
+    class FileMapping : public Mapping {
         public:
-            FileMemoryMapping(uint64_t vstart, uint64_t size, bool kernel = false);
+            FileMapping(uint64_t vstart, uint64_t size, bool kernel = false);
             void map(VirtualMemoryManager &mm) override;
             //map file somehow
         private:
             //File Handel
     };
     
-    class PhysicalMemoryMapping : public Mapping {
+    class PhysicalMapping : public Mapping {
         public:
-            PhysicalMemoryMapping(uint64_t vstart, const Util::vector<uint64_t>& physicalAddresses);
+            PhysicalMapping(uint64_t vstart, const Util::vector<uint64_t>& physicalAddresses);
             void map(VirtualMemoryManager &vmm) override;
         private:
             Util::vector<uint64_t> physicalAddresses;
     };
-    
+
     class VirtualAddressSpace{
         public:
             inline VirtualAddressSpace(VirtualMemoryManager& vmmManager) : vmm(vmmManager){}
@@ -83,6 +83,7 @@ namespace Memory{
             inline const Util::vector<Util::UniquePtr<Mapping>>& getMappings() const {return mappings;}
             
         private:
+            uint8_t test;
             VirtualMemoryManager vmm;
             Util::vector<Util::UniquePtr<Mapping>> mappings;
             static VirtualAddressSpace KernelVAS;

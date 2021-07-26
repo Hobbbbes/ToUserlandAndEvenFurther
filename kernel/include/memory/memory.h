@@ -1,5 +1,4 @@
 #pragma once
-#include <stdint.h>
 #include "PreBoot/EfiMemory.h"
 #include "memory/Heap/Heap.h"
 #include "memory/PMM/PageFrameAllocator.h"
