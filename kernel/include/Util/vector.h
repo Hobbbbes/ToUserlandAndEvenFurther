@@ -4,6 +4,7 @@
 #include "Util/panic.h"
 #include <type_traits>
 #include <concepts>
+#include <utility>
 namespace Util{
 template<typename T> 
 class vector{
@@ -61,29 +62,33 @@ class vector{
             vec.capacity = 0;
         }
         
-        void operator=(vector&& vec){
+        vector& operator=(vector&& vec){
             buff = vec.buff;
             size = vec.size;
             capacity = vec.capacity;
             vec.buff = nullptr;
             vec.size = 0;
             vec.capacity = 0;
+            return *this;
         }
 
-        void push_back(const T& value){
+        void push_back(T&& value) requires std::move_constructible<T> {
+            
+            if(size + 1 > capacity){
+                ++capacity *= 2;
+                swapBuffers();
+            }
+            buff[size++] = std::move(value);
+        }
+
+        void push_back(const T& value) requires std::copy_constructible<T> {
             if(size + 1 > capacity){
                 ++capacity *= 2;
                 swapBuffers();
             }
             buff[size++] = value;
         }
-        void push_back(const T&& value){
-            if(size + 1 > capacity){
-                ++capacity *= 2;
-                swapBuffers();
-            }
-            buff[size++] = value;
-        }
+
         inline T& operator [] (uint64_t index) const {
             #ifdef DEBUG
             if (index >= size)
@@ -117,15 +122,15 @@ class vector{
         }
         void remove(const T& v) requires std::equality_comparable<T> {
             for(uint64_t i = 0; i < size ; i++){
-                if(buff[i] = v)
+                if(buff[i] == v)
                     remove(i);
 
             }
         }
         template<typename U>
-        void remove(const U& v) requires std::equality_comparable_with<T,U> {
+        void remove(const U& v) { //requires std::equality_comparable_with<T,U>
             for(uint64_t i = 0; i < size ; i++){
-                if(buff[i] = v)
+                if(buff[i] == v)
                     remove(i);
             }
         }

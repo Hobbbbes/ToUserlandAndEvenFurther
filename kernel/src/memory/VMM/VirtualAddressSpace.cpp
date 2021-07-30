@@ -1,19 +1,21 @@
 #include "memory/VMM/VirtualAddressSpace.h"
+#include <utility>
 namespace Memory{
     uint64_t VirtualAddressSpace::mappingForAddressIndex(uint64_t addr) const{
         for(uint64_t i = 0; i<mappings.getSize(); i++){
             if(mappings[i]->containsAddress(addr))
                 return i;
         }
+        return -1;
     }
     void VirtualAddressSpace::map(Util::UniquePtr<Mapping>&& mapping){
         mapping->map(vmm);
-        mappings.push_back(mapping);
+        mappings.push_back(std::move(mapping));
     }
     void VirtualAddressSpace::unmap(const Mapping& mapping){
         ASSERT(mappings.contains<Mapping>(mapping),"Mapping not in mappings \n")
         mapping.unmap(vmm);
-        mappings.remove(mapping);
+        mappings.remove<Mapping>(mapping);
     }
     VirtualAddressSpace VirtualAddressSpace::newUserVAS(){
         PageTable* pf = reinterpret_cast<PageTable*>(PageFrameAllocator::getPMM().RequestPage());
