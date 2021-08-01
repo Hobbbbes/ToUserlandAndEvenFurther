@@ -2,6 +2,8 @@
 #include "Util/vector.h"
 #include "memory/memory.h"
 #include "Util/uniqeptr.h"
+#include "PreBoot/Bootinfo.h"
+extern "C" [[noreturn]] void _start(BootInfo* bootinfo);
 namespace Memory {
     class Mapping {
         public:
@@ -104,5 +106,6 @@ namespace Memory {
             Util::vector<Util::UniquePtr<Mapping>> mappings;
             static VirtualAddressSpace KernelVAS;
             Mapping findMappingPlaceWithSizeInVAS(uint64_t size);
+        friend void ::_start(BootInfo* bootinfo);
     };
 }

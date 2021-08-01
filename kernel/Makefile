@@ -5,7 +5,7 @@ LDS = kernel.ld
 CC = gcc
 ASMC = nasm
 LD = ld
-CFLAGS = -ffreestanding -fshort-wchar -mno-red-zone -std=c++20 -Iinclude -fno-stack-protector -MMD -MP -fno-exceptions -g 
+CFLAGS = -ffreestanding -fshort-wchar -mno-red-zone -std=c++20 -Iinclude -fno-stack-protector -MMD -MP -fno-exceptions -fno-rtti -g 
 ASMFLAGS = 
 LDFLAGS = -T $(LDS) -static -Bsymbolic -nostdlib -no-relax
 LOOP = $(shell cat loopdevice)
@@ -89,10 +89,10 @@ clean:
 	rm -f $(BUILDDIR)/kernel.elf
 
 run_cpu_reset: remove_loop
-	qemu-system-x86_64 -drive format=raw,file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -bios /usr/share/ovmf/x64/OVMF.fd -d cpu_reset -net none
+	qemu-system-x86_64 -drive format=raw,file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -bios /usr/share/ovmf/x64/OVMF.fd -d cpu_reset,mmu,guest_errors,page -net none
 
 run: remove_loop
-	qemu-system-x86_64 -d mmu,guest_errors,page -drive format=raw,file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -bios /usr/share/ovmf/x64/OVMF.fd -net none
+	qemu-system-x86_64 -drive format=raw,file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -bios /usr/share/ovmf/x64/OVMF.fd -net none
 debug: remove_loop
 	qemu-system-x86_64 -drive format=raw,file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -bios /usr/share/ovmf/x64/OVMF.fd -net none -s&
 	gdb -tui -ex "target remote localhost:1234" -ex "symbol-file bin/kernel.elf" -ex "set disassembly-flavor intel" -ex "focus cmd" -ex "set print asm-demangle on" -ex "set print demangle on"

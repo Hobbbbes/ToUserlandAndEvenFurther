@@ -6,7 +6,8 @@
 extern "C" [[noreturn]] void init_stack(BootInfo* BootInfo, uint64_t stackBase);
 
 void IdentityMapPhysicalMemory(BootInfo* bi){
-    //Identity Map Physical RAM
+    //Identity Map Physical RAM*
+    /*
     for(uint64_t addr = 0; addr < memorySizeBytes; addr += 0x1000){
         Memory::KernelVMM.MapMemory(addr, addr);
     }
@@ -14,40 +15,76 @@ void IdentityMapPhysicalMemory(BootInfo* bi){
     for(uint64_t addr = reinterpret_cast<uint64_t>(bi->framebuffer->BaseAddress);
         addr < bi->framebuffer->BufferSize + reinterpret_cast<uint64_t>(bi->framebuffer->BaseAddress); addr += 0x1000){
         Memory::KernelVMM.MapMemory(addr,addr);
-    }
+    }()
+    */
+   //Map physical memory
+   Memory::VirtualAddressSpace::getKernelVAS().map(
+       Util::UniquePtr<Memory::Mapping>(
+           new Memory::DeviceMapping(0,memorySizeBytes,0,true)
+       )
+   );
+   Memory::VirtualAddressSpace::getKernelVAS().map(
+       Util::UniquePtr<Memory::Mapping>(
+           new Memory::DeviceMapping(reinterpret_cast<uint64_t>(bi->framebuffer->BaseAddress),
+           bi->framebuffer->BufferSize,reinterpret_cast<uint64_t>(bi->framebuffer->BaseAddress),true)
+       )
+   );
     memset(bi->framebuffer->BaseAddress,(uint8_t)0,bi->framebuffer->BufferSize);
 }
 
-void InitHeap(Memory::VirtualMemoryManager& vmm){
+void InitHeap(Memory::VirtualMemoryManager& vmm, Memory::VirtualMemoryManager& old_vmm){
     for(uint64_t i = 0; i<INIT_HEAP_SIZE;i++){
         uint64_t page = Memory::PageFrameAllocator::getPMM().RequestPage();
-        vmm.MapMemory(HEAP_START + (i * 0x1000), page);
+        vmm.MapMemory(HEAP_START + (i * 0x1000), page, Memory::PT_Flag::ReadWrite | Memory::PT_Flag::UserSupper);
+        old_vmm.MapMemory(HEAP_START + (i * 0x1000), page, Memory::PT_Flag::ReadWrite | Memory::PT_Flag::UserSupper);
     }
     Memory::initHeap(HEAP_START,HEAP_START + (INIT_HEAP_SIZE * 0x1000));
 }
 
 void MapStack(){
+    /*
     for(uint64_t i = 0;i<=STACK_SIZE;i++){
         uint64_t page = Memory::PageFrameAllocator::getPMM().RequestPage();
         Memory::KernelVMM.MapMemory(STACK_START + (i * 0x1000), page);
     }
+    */
+   Memory::VirtualAddressSpace::getKernelVAS().map(
+       Util::UniquePtr<Memory::Mapping>(
+           new Memory::Mapping(STACK_START,STACK_SIZE,Memory::Mapping::Type::ProcessStack,Memory::Mapping::MappingType::All,true)
+       )
+   );
 }
 
 extern "C" [[noreturn]] void _start(BootInfo* bootinfo) {
     Graphics::KernelDrawer = Graphics::TextDrawer(*bootinfo->framebuffer,*bootinfo->psf1_font);
     Graphics::KernelDrawer.print("In Kernel\n");
-    asm("hlt");
-    Memory::PageFrameAllocator pmm = Memory::PageFrameAllocator(bootinfo->mMap,bootinfo->mMapSize,bootinfo->mMapDescriptorSize);
-    Memory::VirtualMemoryManager vmm{reinterpret_cast<Memory::PageTable*>(Memory::PageFrameAllocator::getPMM().RequestPage())};
+    Memory::PageFrameAllocator::KernelPMM = Memory::PageFrameAllocator(bootinfo->mMap,bootinfo->mMapSize,bootinfo->mMapDescriptorSize);
+
     uint64_t kernelSizePages = (reinterpret_cast<uint64_t>(&_KernelEnd) - reinterpret_cast<uint64_t>(&_KernelStart)) / 0x1000 + 1;
-    
-    Memory::PageFrameAllocator::getPMM().LockPages(reinterpret_cast<uint64_t>(&_KernelStart),kernelSizePages); 
+    Memory::PageFrameAllocator::getPMM().LockPages(reinterpret_cast<uint64_t>(&_KernelStart) - KERNEL_IMAGE_START,kernelSizePages); 
     
     uint64_t PLM4 = Memory::PageFrameAllocator::getPMM().RequestPage();
-    memset(reinterpret_cast<void*>(PLM4), (uint8_t)0,0x1000);
-    Memory::KernelVMM = Memory::VirtualMemoryManager(reinterpret_cast<Memory::PageTable*>(PLM4));
+    memset(reinterpret_cast<void*>(PLM4),(uint8_t)0,0x1000);
+    Memory::VirtualMemoryManager vmm(reinterpret_cast<Memory::PageTable*>(PLM4)); 
+    uint64_t old_PLM4;
+    asm("mov %%cr3,%0" : "=r" (old_PLM4) : : );
+    Memory::VirtualMemoryManager old_vmm(reinterpret_cast<Memory::PageTable*>(old_PLM4));
 
+    InitHeap(vmm, old_vmm);
+    Memory::VirtualAddressSpace::initKernelVAS(vmm);
+    //Heap Mapping
+    Memory::VirtualAddressSpace::getKernelVAS().mappings.push_back(
+        Util::UniquePtr(new Memory::Mapping(HEAP_START,INIT_HEAP_SIZE,Memory::Mapping::Type::ProcessData,Memory::Mapping::MappingType::All,true))
+    );
+    Util::vector<uint64_t> phyiscalAddr;
+    phyiscalAddr.reserve(kernelSizePages);
+    for(uint64_t i = 0; i<kernelSizePages;i++)
+        phyiscalAddr.push_back(reinterpret_cast<uint64_t>(&_KernelStart) + i*0x1000);
+    Memory::VirtualAddressSpace::getKernelVAS().map(
+        Util::UniquePtr<Memory::Mapping>(new Memory::PhysicalMapping((uint64_t)&_KernelStart,Memory::Mapping::Type::ProcessCode,phyiscalAddr,true))
+    );
     IdentityMapPhysicalMemory(bootinfo);
+    MapStack();
     asm("mov %0,%%cr3" : : "r"(PLM4));
 
     Graphics::KernelDrawer.print("Init PMM\n");
@@ -57,9 +94,7 @@ extern "C" [[noreturn]] void _start(BootInfo* bootinfo) {
     print((void*)PLM4).print("\n");
 
     Graphics::KernelDrawer.print("Init Heap at ").print((void*) HEAP_START).print("\n");
-    InitHeap();
     Graphics::KernelDrawer.print("Map Stack at ").print((void*) STACK_START).print("\n");
-    MapStack();
     Graphics::KernelDrawer.print("Change to new Stack\n");
     //Sets new stack up and calls main with bootinfo as first parameter
     init_stack(bootinfo,(STACK_START) + (STACK_SIZE * 0x1000)); 

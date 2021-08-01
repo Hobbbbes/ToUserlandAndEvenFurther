@@ -1,6 +1,7 @@
 #include "memory/VMM/VirtualAddressSpace.h"
 #include <utility>
 namespace Memory{
+    VirtualAddressSpace VirtualAddressSpace::KernelVAS (VirtualMemoryManager(0));
     uint64_t VirtualAddressSpace::mappingForAddressIndex(uint64_t addr) const{
         for(uint64_t i = 0; i<mappings.getSize(); i++){
             if(mappings[i]->containsAddress(addr))
@@ -10,7 +11,7 @@ namespace Memory{
     }
     void VirtualAddressSpace::map(Util::UniquePtr<Mapping>&& mapping){
         mapping->map(vmm);
-        mappings.push_back(std::move(mapping));
+        mappings.push_back(Util::move(mapping));
     }
     void VirtualAddressSpace::unmap(const Mapping& mapping){
         ASSERT(mappings.contains<Mapping>(mapping),"Mapping not in mappings \n")
@@ -24,6 +25,8 @@ namespace Memory{
         return VirtualAddressSpace{VirtualMemoryManager{reinterpret_cast<PageTable*>(pf)}};
     }
 
+    Mapping::Mapping(uint64_t vstart, uint64_t size, Type type, MappingType mappingType, bool kernel)
+     : start(vstart), size(size), type(type), mappingType(mappingType), kernel(kernel) {}
 
     void Mapping::map(VirtualMemoryManager &vmm) const {
         ASSERT(type == Mapping::Type::Device || type == Mapping::Type::File || mappingType == Mapping::MappingType::Physical,

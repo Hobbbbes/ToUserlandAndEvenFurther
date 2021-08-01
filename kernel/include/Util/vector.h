@@ -15,7 +15,7 @@ class vector{
         void swapBuffers(){
             T* newBuff = reinterpret_cast<T*>(new uint8_t[capacity * sizeof(T)]);
             for(uint64_t i = 0; i<size;i++)
-                newBuff[i] = move(buff[i]);
+                newBuff[i] = std::move(buff[i]);
             delete[] buff;
             buff = newBuff;
         }
@@ -86,7 +86,7 @@ class vector{
                 ++capacity *= 2;
                 swapBuffers();
             }
-            buff[size++] = value;
+            buff[size++](value);
         }
 
         inline T& operator [] (uint64_t index) const {

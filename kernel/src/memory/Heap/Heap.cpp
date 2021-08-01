@@ -187,3 +187,6 @@ void operator delete(void* p,uint64_t sz){
 void operator delete[](void* p){
     operator delete(p,0);
 }
+void operator delete[](void* ptr, size_t sz){
+    operator delete(ptr,sz);
+}

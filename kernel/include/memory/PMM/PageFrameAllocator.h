@@ -2,11 +2,13 @@
 #include "memory/memory.h"
 #include "PageStack.h"
 #include "Util/Bitmap.h"
+#include "PreBoot/Bootinfo.h"
+extern "C" [[noreturn]] void _start(BootInfo* bootinfo);
 namespace Memory{
 class PageFrameAllocator{
     public:
         PageFrameAllocator(EFI_MEMORY_DESCRIPTOR* mMap, uint64_t mMapSize, uint64_t mMapDescSize);
-        //PageFrameAllocator();
+        PageFrameAllocator() = default;
         uint64_t RequestPage();
         void FreePage(uint64_t addr);
         void FreePages(uint64_t addr, uint64_t count);
@@ -32,5 +34,6 @@ class PageFrameAllocator{
         Util::Bitmap pageBitmap;
         bool InitializedSuccessfully = false;
         static PageFrameAllocator KernelPMM;
+        friend void ::_start(BootInfo* bootinfo);
 };
 }
