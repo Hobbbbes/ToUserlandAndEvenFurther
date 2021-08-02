@@ -16,7 +16,8 @@ class vector{
             T* newBuff = reinterpret_cast<T*>(new uint8_t[capacity * sizeof(T)]);
             for(uint64_t i = 0; i<size;i++)
                 newBuff[i] = std::move(buff[i]);
-            delete[] buff;
+            if(buff != nullptr)
+                delete[] buff;
             buff = newBuff;
         }
     public:
@@ -100,7 +101,7 @@ class vector{
         inline T* end() const {return buff + size - 1;}
         inline uint64_t getSize() const {return size;}
         inline uint64_t getCapacity() const {return capacity;}
-        inline bool contains(const T& v) requires std::equality_comparable<T> {
+        bool contains(const T& v) const requires std::equality_comparable<T> {
             for(const T& inVec : *this){
                 if(inVec == v)
                     return true;
@@ -108,7 +109,7 @@ class vector{
             return false;
         }
         template<typename U>
-        bool contains(const U& v) requires std::equality_comparable_with<T,U> {
+        bool contains(const U& v) const requires requires (const T& x, const U& y) {x==y;} {
             for(const T& inVec : *this){
                 if(inVec == v)
                     return true;

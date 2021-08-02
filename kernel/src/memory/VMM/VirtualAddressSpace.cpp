@@ -82,7 +82,7 @@ namespace Memory{
     physicalAddresses(physicalAddresses){}
 
     void PhysicalMapping::map(VirtualMemoryManager &vmm) const {
-        ASSERT(mappingType != MappingType::Physical || type != Type::ProcessDataShared, "Physical Mapping without Physical MappingType \n")
+        ASSERT(mappingType != MappingType::Physical, "Physical Mapping without Physical MappingType \n")
         uint64_t flags = PT_Flag::ReadWrite;
         if (kernel)
             flags |= PT_Flag::Global | PT_Flag::UserSupper;

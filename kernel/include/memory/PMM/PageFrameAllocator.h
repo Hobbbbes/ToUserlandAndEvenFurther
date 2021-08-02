@@ -13,11 +13,11 @@ class PageFrameAllocator{
         void FreePage(uint64_t addr);
         void FreePages(uint64_t addr, uint64_t count);
         void LockPages(uint64_t addr, uint64_t count);
-        bool isInitialized()const;
         uint64_t GetFreeRam()const;
         uint64_t GetUsedRam()const;
         uint64_t GetReservedRam()const;
         static PageFrameAllocator& getPMM();
+        inline bool isInitialized()const{return InitializedSuccessfully;}
     private:
         void LockPage(uint64_t addr);
 

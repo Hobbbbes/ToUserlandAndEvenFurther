@@ -30,10 +30,10 @@ namespace Util{
             }
             T* getPtr(){return ptr;}
             const T* getPtr()const{return ptr;}
-            inline bool operator==(const T& v) requires std::equality_comparable<T> {
+            inline bool operator==(const T& v) const requires std::equality_comparable<T> {
                 return v == *ptr;
             }
-            inline bool operator==(const UniquePtr& v) requires std::equality_comparable<T> {
+            inline bool operator==(const UniquePtr& v) const requires std::equality_comparable<T> {
                 return *v == *ptr;
             }
         private:

@@ -20,16 +20,15 @@ void IdentityMapPhysicalMemory(BootInfo* bi){
    //Map physical memory
    Memory::VirtualAddressSpace::getKernelVAS().map(
        Util::UniquePtr<Memory::Mapping>(
-           new Memory::DeviceMapping(0,memorySizeBytes,0,true)
+           new Memory::DeviceMapping(0,memorySizeBytes / 0x1000,0,true)
        )
    );
    Memory::VirtualAddressSpace::getKernelVAS().map(
        Util::UniquePtr<Memory::Mapping>(
            new Memory::DeviceMapping(reinterpret_cast<uint64_t>(bi->framebuffer->BaseAddress),
-           bi->framebuffer->BufferSize,reinterpret_cast<uint64_t>(bi->framebuffer->BaseAddress),true)
+           bi->framebuffer->BufferSize / 0x1000,reinterpret_cast<uint64_t>(bi->framebuffer->BaseAddress),true)
        )
    );
-    memset(bi->framebuffer->BaseAddress,(uint8_t)0,bi->framebuffer->BufferSize);
 }
 
 void InitHeap(Memory::VirtualMemoryManager& vmm, Memory::VirtualMemoryManager& old_vmm){
@@ -56,6 +55,7 @@ void MapStack(){
 }
 
 extern "C" [[noreturn]] void _start(BootInfo* bootinfo) {
+    memset(bootinfo->framebuffer->BaseAddress,(uint8_t)0,bootinfo->framebuffer->BufferSize);
     Graphics::KernelDrawer = Graphics::TextDrawer(*bootinfo->framebuffer,*bootinfo->psf1_font);
     Graphics::KernelDrawer.print("In Kernel\n");
     Memory::PageFrameAllocator::KernelPMM = Memory::PageFrameAllocator(bootinfo->mMap,bootinfo->mMapSize,bootinfo->mMapDescriptorSize);

@@ -1,11 +1,18 @@
 #pragma once
 
+#ifdef DEBUG
+#define ASSERT(cond,msg) if(cond){Util::Panic(msg);}
+#define Panic(msg) _Panic(msg,__FILE__,__LINE__,__PRETTY_FUNCTION__);
+#else
+#define ASSERT(cond,msg)
+#define Panic(msg) _Panic(msg,__PRETTY_FUNCTION__);
+#endif
+
 namespace Util{
-    void Panic(const char* message = "",const char* caller = __builtin_FUNCTION());
     #ifdef DEBUG
-    #define ASSERT(cond,msg) if(cond){Util::Panic(msg);}
+    void _Panic(const char* msg, const char* file, int line, const char* func);
     #else
-    #define ASSERT(cond,msg)
+    void _Panic(const char* message = "",const char* caller = __builtin_FUNCTION());
     #endif
 
 }
