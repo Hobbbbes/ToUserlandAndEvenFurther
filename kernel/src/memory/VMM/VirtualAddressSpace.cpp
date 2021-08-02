@@ -83,7 +83,9 @@ namespace Memory{
 
     void PhysicalMapping::map(VirtualMemoryManager &vmm) const {
         ASSERT(mappingType != MappingType::Physical, "Physical Mapping without Physical MappingType \n")
-        uint64_t flags = PT_Flag::ReadWrite;
+        uint64_t flags = 0;
+        if(type != Type::LibCode && type != Type::ProcessCode)
+            flags = PT_Flag::ReadWrite;
         if (kernel)
             flags |= PT_Flag::Global | PT_Flag::UserSupper;
         for(uint64_t i = 0; i < size; i++){

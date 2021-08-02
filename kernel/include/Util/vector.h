@@ -14,11 +14,24 @@ class vector{
         uint64_t capacity = 0;
         void swapBuffers(){
             T* newBuff = reinterpret_cast<T*>(new uint8_t[capacity * sizeof(T)]);
-            for(uint64_t i = 0; i<size;i++)
-                newBuff[i] = std::move(buff[i]);
-            if(buff != nullptr)
-                delete[] buff;
+            if(buff != nullptr){
+                for(uint64_t i = 0; i<size;i++){
+                    newBuff[i] = std::move(buff[i]);
+                    buff[i].~T();
+                }
+                delete buff;
+            } else {
+                for(uint64_t i = 0; i<size;i++)
+                    newBuff[i] = std::move(buff[i]);
+            }
+
             buff = newBuff;
+        }
+        void destroyBuff(){
+            for(uint64_t i = 0; i < size; i++){
+                buff[i].~T();
+            }
+            delete buff;
         }
     public:
     
@@ -35,7 +48,7 @@ class vector{
 
         vector(const vector& vec){
             if(buff != nullptr)
-                delete[] buff;
+                destroyBuff();
             buff = new T[vec.capacity];
             size = vec.size;
             capacity = vec.capacity;
@@ -46,7 +59,7 @@ class vector{
 
         vector& operator=(const vector& vec){
             if(buff != nullptr)
-                delete[] buff;
+                destroyBuff();
             buff = new T[vec.capacity];
             size = vec.size;
             capacity = vec.capacity;

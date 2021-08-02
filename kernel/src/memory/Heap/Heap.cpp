@@ -14,7 +14,7 @@ struct Heap{
 
 //Used for Free List
 struct HeapEntryHeader{
-    uint64_t magicValue = 0xe1efa87e1efa87;
+    uint64_t magicValue = 0xe1efa87e1efa87ff;
     uint64_t size;
     HeapEntryHeader* nextHeader;
     HeapEntryHeader* previousHeader;

@@ -61,6 +61,7 @@ extern "C" [[noreturn]] void _start(BootInfo* bootinfo) {
     Memory::PageFrameAllocator::KernelPMM = Memory::PageFrameAllocator(bootinfo->mMap,bootinfo->mMapSize,bootinfo->mMapDescriptorSize);
 
     uint64_t kernelSizePages = (reinterpret_cast<uint64_t>(&_KernelEnd) - reinterpret_cast<uint64_t>(&_KernelStart)) / 0x1000 + 1;
+    uint64_t kernelROSizePages = (reinterpret_cast<uint64_t>(&_KernelROEnd) - reinterpret_cast<uint64_t>(&_KernelStart)) / 0x1000 + 1;
     Memory::PageFrameAllocator::getPMM().LockPages(reinterpret_cast<uint64_t>(&_KernelStart) - KERNEL_IMAGE_START,kernelSizePages); 
     
     uint64_t PLM4 = Memory::PageFrameAllocator::getPMM().RequestPage();
@@ -77,12 +78,22 @@ extern "C" [[noreturn]] void _start(BootInfo* bootinfo) {
         Util::UniquePtr(new Memory::Mapping(HEAP_START,INIT_HEAP_SIZE,Memory::Mapping::Type::ProcessData,Memory::Mapping::MappingType::All,true))
     );
     Util::vector<uint64_t> phyiscalAddr;
-    phyiscalAddr.reserve(kernelSizePages);
-    for(uint64_t i = 0; i<kernelSizePages;i++)
-        phyiscalAddr.push_back(reinterpret_cast<uint64_t>(&_KernelStart) + i*0x1000);
+    phyiscalAddr.reserve(kernelROSizePages);
+    for(uint64_t i = 0; i<kernelROSizePages;i++)
+        phyiscalAddr.push_back((reinterpret_cast<uint64_t>(&_KernelStart) - KERNEL_IMAGE_START)+ i*0x1000);
     Memory::VirtualAddressSpace::getKernelVAS().map(
         Util::UniquePtr<Memory::Mapping>(new Memory::PhysicalMapping((uint64_t)&_KernelStart,Memory::Mapping::Type::ProcessCode,phyiscalAddr,true))
     );
+
+    Util::vector<uint64_t> phyiscalDataAddr;
+    phyiscalDataAddr.reserve(kernelSizePages - kernelROSizePages);
+    uint64_t _kernelROStart = (uint64_t)&_KernelROEnd + (0x1000 - ((uint64_t)&_KernelROEnd % 0x1000));
+    for(uint64_t i = 0; i<kernelSizePages - kernelROSizePages;i++)
+        phyiscalDataAddr.push_back((_kernelROStart - KERNEL_IMAGE_START)+ i*0x1000);
+    Memory::VirtualAddressSpace::getKernelVAS().map(
+        Util::UniquePtr<Memory::Mapping>(new Memory::PhysicalMapping(_kernelROStart,Memory::Mapping::Type::ProcessData,phyiscalDataAddr,true))
+    );
+
     IdentityMapPhysicalMemory(bootinfo);
     MapStack();
     asm("mov %0,%%cr3" : : "r"(PLM4));

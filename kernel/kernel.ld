@@ -9,12 +9,14 @@ SECTIONS
         *(.text*)
     }
 
-    .data ALIGN(0x1000) : AT (ADDR (.data) - 0x400000000000){
-        *(.data*)
-    }
-
     .rodata ALIGN(0x1000) : AT (ADDR (.rodata) - 0x400000000000){
         *(.rodata*)
+    }
+
+    _KernelROEnd = .;
+
+    .data ALIGN(0x1000) : AT (ADDR (.data) - 0x400000000000){
+        *(.data*)
     }
 
     .bss ALIGN(0x1000) : AT (ADDR (.bss) - 0x400000000000){

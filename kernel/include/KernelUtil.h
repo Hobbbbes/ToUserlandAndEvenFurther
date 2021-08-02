@@ -9,3 +9,4 @@
 #include "Util/panic.h"
 extern uint64_t _KernelStart;
 extern uint64_t _KernelEnd;
+extern uint64_t _KernelROEnd;
